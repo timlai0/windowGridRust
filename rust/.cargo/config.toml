@@ -1,0 +1,13 @@
+# The hook DLLs are `no_std` and link without the MSVC toolchain or Windows SDK:
+# rust-lld in lld-link mode, imports declared with `raw-dylib`.
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld"
+rustflags = ["-C", "linker-flavor=lld-link", "-C", "link-arg=/ENTRY:DllMain", "-C", "link-arg=/NODEFAULTLIB"]
+
+[target.i686-pc-windows-msvc]
+linker = "rust-lld"
+rustflags = ["-C", "linker-flavor=lld-link", "-C", "link-arg=/ENTRY:DllMain@12", "-C", "link-arg=/NODEFAULTLIB"]
+
+[target.aarch64-pc-windows-msvc]
+linker = "rust-lld"
+rustflags = ["-C", "linker-flavor=lld-link", "-C", "link-arg=/ENTRY:DllMain", "-C", "link-arg=/NODEFAULTLIB"]

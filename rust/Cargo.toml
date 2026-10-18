@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+members = ["wg-core", "wg-hook", "wg-overlay", "wg-win", "wg-e2e", "wg-app"]
+# wg-e2e drives the real mouse and keyboard; it is only built and run when asked for (-p wg-e2e).
+default-members = ["wg-core", "wg-hook", "wg-overlay", "wg-win", "wg-app"]
+
+[workspace.package]
+version = "2.0.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+opt-level = "s"
+lto = true
+strip = true
+codegen-units = 1

@@ -1,0 +1,18 @@
+[package]
+name = "wg-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Settings model, IPC contract and shared helpers for WindowGrid"
+
+[features]
+# `std` adds the settings model, JSON writer and log formatting. Without it the crate is
+# `no_std` and exposes only the IPC contract and key codes (used by the hook DLLs).
+default = ["std"]
+std = ["dep:serde_json"]
+# Test-only mutex, window-message and shared-memory names (see `names`).
+isolated = []
+
+[dependencies]
+serde_json = { version = "1", optional = true }

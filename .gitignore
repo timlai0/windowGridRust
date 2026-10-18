@@ -1,0 +1,31 @@
+# Build & release outputs
+/rust/target/
+/rust/target-iso/
+/rust/dist/
+/rust/dist-iso/
+[Dd]ist/
+[Ll]og/
+[Ll]ogs/
+*.log
+
+# Environment & IDE files
+.env
+.vs/
+.vscode/
+.idea/
+*.code-workspace
+*.user
+*.rsuser
+
+# OS metadata & temporary files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+~$*
+*~
+*.tmp
+*.swp
+__pycache__/
+*.pyc
+test-results/

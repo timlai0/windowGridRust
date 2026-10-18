@@ -1,0 +1,85 @@
+{
+    "App":
+    {
+        "Portable": true,
+        "SplashScreen": false
+    },
+    "Grid":
+    {
+        "GridX": 6,
+        "GridY": 12,
+        "BlurRadius": 3,
+        "FillWindow": true,
+        "Opacity": 0.75,
+        "RadialGradient": true,
+        "ShowAspectRatio": true,
+        "ShowCellSpan": true,
+        "ShowDimensions": true,
+        "ShowScreenCoverage": true,
+        "ShowSelectionHUD": true,
+        "ShowInteractionHints": true,
+        "ShowModeIndicator": true,
+        "Anchor": 0,
+        "CompensateWindowMargins": true,
+        "PreserveSizeOnMove": true,
+        "ThemeName": "default",
+        "Themes":
+        [
+            {
+                "Name": "default",
+                "ColorLine": "#FF00BDD4",
+                "ColorStart": "#FF0097A7",
+                "ColorEnd": "#FFB2EBF2"
+            },
+            {
+                "Name": "dark",
+                "ColorLine": "#FF444444",
+                "ColorStart": "#FF222222",
+                "ColorEnd": "#FF666666"
+            },
+            {
+                "Name": "light",
+                "ColorLine": "#FFAAAAAA",
+                "ColorStart": "#FFEEEEEE",
+                "ColorEnd": "#FFFFFFFF"
+            },
+            {
+                "Name": "red",
+                "ColorLine": "#FFFF0000",
+                "ColorStart": "#FF8B0000",
+                "ColorEnd": "#FFFF6666"
+            },
+            {
+                "Name": "green",
+                "ColorLine": "#FF00FF00",
+                "ColorStart": "#FF006400",
+                "ColorEnd": "#FF66FF66"
+            },
+            {
+                "Name": "blue",
+                "ColorLine": "#FF0000FF",
+                "ColorStart": "#FF00008B",
+                "ColorEnd": "#FF6666FF"
+            }
+        ]
+    },
+    "Input":
+    [
+        {
+            "Key": "KEY_SPACE",
+            "Command": "Resize"
+        },
+        {
+            "Key": "KEY_LCONTROL",
+            "Command": "Move"
+        },
+        {
+            "Key": "MOUSE_RBUTTON",
+            "Command": "Resize"
+        },
+        {
+            "Key": "MOUSE_MBUTTON",
+            "Command": "Move"
+        }
+    ]
+}
