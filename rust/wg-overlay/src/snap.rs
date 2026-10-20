@@ -127,6 +127,86 @@ pub fn compute(p: &SnapParams) -> Option<SnapRect> {
     Some(SnapRect { x, y, w, h })
 }
 
+/// How the overlay checks that a snap really landed.
+///
+/// The snap is a fire-and-forget `SWP_ASYNCWINDOWPOS`, and plenty can undo it afterwards: the
+/// target's own handling of `WM_EXITSIZEMOVE`, an Aero Snap or maximize triggered by the
+/// pointer sitting at the screen edge, a `WM_DPICHANGED` resize after crossing to a monitor
+/// with another scale. So the overlay polls the window for a short while and re-applies the
+/// rectangle until it sticks.
+pub const VERIFY_TICK_MS: u32 = 40;
+/// Give up after this many polls (about half a second).
+pub const VERIFY_MAX_TICKS: u32 = 14;
+/// Consecutive matching polls that count as "it stuck".
+pub const VERIFY_STABLE_TICKS: u32 = 3;
+/// Re-applications before accepting the window's own idea (e.g. a minimum size).
+pub const VERIFY_MAX_REAPPLY: u32 = 3;
+const VERIFY_TOLERANCE: i32 = 1;
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum VerifyStep {
+    /// Look again on the next poll.
+    Wait,
+    /// The window is where it should be and stayed there.
+    Done,
+    /// It is somewhere else: apply the rectangle again.
+    Reapply,
+    /// Out of attempts or time; the window refuses (or is still being dragged).
+    GiveUp,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct Verify {
+    pub want: SnapRect,
+    ticks: u32,
+    stable: u32,
+    reapplied: u32,
+    /// Polls to skip after a re-application so the async request can be processed.
+    cooldown: u32,
+}
+
+impl Verify {
+    pub fn new(want: SnapRect) -> Verify {
+        Verify { want, ticks: 0, stable: 0, reapplied: 0, cooldown: 0 }
+    }
+
+    pub fn reapplied(&self) -> u32 {
+        self.reapplied
+    }
+
+    /// One poll. `actual` is `GetWindowRect`, `in_loop` whether the target is (again) inside a
+    /// move/size loop.
+    pub fn tick(&mut self, actual: Rect, zoomed: bool, in_loop: bool) -> VerifyStep {
+        self.ticks += 1;
+        if in_loop {
+            // A new drag took the window over: stay out of its way.
+            return VerifyStep::GiveUp;
+        }
+        if self.cooldown > 0 {
+            self.cooldown -= 1;
+            return if self.ticks >= VERIFY_MAX_TICKS { VerifyStep::GiveUp } else { VerifyStep::Wait };
+        }
+        let w = self.want;
+        let close = |a: i32, b: i32| (a - b).abs() <= VERIFY_TOLERANCE;
+        let matches = !zoomed
+            && close(actual.left, w.x)
+            && close(actual.top, w.y)
+            && close(actual.right, w.x + w.w)
+            && close(actual.bottom, w.y + w.h);
+        if matches {
+            self.stable += 1;
+            return if self.stable >= VERIFY_STABLE_TICKS { VerifyStep::Done } else { VerifyStep::Wait };
+        }
+        self.stable = 0;
+        if self.reapplied >= VERIFY_MAX_REAPPLY || self.ticks >= VERIFY_MAX_TICKS {
+            return VerifyStep::GiveUp;
+        }
+        self.reapplied += 1;
+        self.cooldown = 1;
+        VerifyStep::Reapply
+    }
+}
+
 /// `overflow * clamp(offset / extent, 0, 1)`, rounded.
 fn overflow_share(overflow: i32, offset: i32, extent: i32) -> i32 {
     if extent <= 0 {
@@ -156,6 +236,65 @@ mod tests {
             preserve_size_on_move: true,
             cursor: None,
         }
+    }
+
+    fn want() -> SnapRect {
+        SnapRect { x: 100, y: 50, w: 400, h: 300 }
+    }
+
+    fn at_want() -> Rect {
+        Rect::new(100, 50, 500, 350)
+    }
+
+    #[test]
+    fn verify_finishes_once_the_window_stays_put() {
+        let mut v = Verify::new(want());
+        assert_eq!(v.tick(at_want(), false, false), VerifyStep::Wait);
+        assert_eq!(v.tick(Rect::new(101, 50, 500, 349), false, false), VerifyStep::Wait, "1px of slack");
+        assert_eq!(v.tick(at_want(), false, false), VerifyStep::Done);
+        assert_eq!(v.reapplied(), 0);
+    }
+
+    #[test]
+    fn verify_reapplies_when_the_window_was_moved_back() {
+        let mut v = Verify::new(want());
+        assert_eq!(v.tick(at_want(), false, false), VerifyStep::Wait);
+        let stale = Rect::new(300, 300, 700, 600);
+        assert_eq!(v.tick(stale, false, false), VerifyStep::Reapply);
+        assert_eq!(v.tick(stale, false, false), VerifyStep::Wait, "cool-down while the async request is in flight");
+        assert_eq!(v.tick(at_want(), false, false), VerifyStep::Wait);
+        assert_eq!(v.tick(at_want(), false, false), VerifyStep::Wait);
+        assert_eq!(v.tick(at_want(), false, false), VerifyStep::Done);
+        assert_eq!(v.reapplied(), 1);
+    }
+
+    #[test]
+    fn verify_treats_a_maximized_window_as_not_snapped() {
+        let mut v = Verify::new(want());
+        assert_eq!(v.tick(at_want(), true, false), VerifyStep::Reapply);
+    }
+
+    #[test]
+    fn verify_gives_up_on_a_window_that_refuses() {
+        let mut v = Verify::new(want());
+        let stubborn = Rect::new(100, 50, 700, 350); // minimum width wins
+        let mut steps = Vec::new();
+        for _ in 0..30 {
+            let step = v.tick(stubborn, false, false);
+            steps.push(step);
+            if step == VerifyStep::GiveUp {
+                break;
+            }
+        }
+        assert_eq!(steps.last(), Some(&VerifyStep::GiveUp));
+        assert_eq!(v.reapplied(), VERIFY_MAX_REAPPLY);
+        assert!(steps.len() <= VERIFY_MAX_TICKS as usize);
+    }
+
+    #[test]
+    fn verify_backs_off_when_a_new_drag_starts() {
+        let mut v = Verify::new(want());
+        assert_eq!(v.tick(Rect::new(0, 0, 10, 10), false, true), VerifyStep::GiveUp);
     }
 
     #[test]

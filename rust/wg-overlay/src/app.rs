@@ -8,7 +8,7 @@ use crate::hud::{hint_bar, hud_text, HudOptions, HudSubject, HudText};
 use crate::logger::log;
 use crate::names;
 use crate::shm::Section;
-use crate::snap::{self, Mode, SnapParams};
+use crate::snap::{self, Mode, SnapParams, SnapRect, Verify, VerifyStep, VERIFY_TICK_MS};
 use crate::state::{Effect, Machine, TICK_MS};
 use crate::theme::Palette;
 use std::cell::RefCell;
@@ -32,6 +32,7 @@ use wg_core::ipc::{unpack_point, GridWindowMemory, SettingsMemory, Wire};
 use wg_core::settings::WindowAnchor;
 
 const TIMER_ID: usize = 1;
+const VERIFY_TIMER_ID: usize = 2;
 
 /// A renderer plus the swap chain it draws into and the composition tree showing it.
 struct Gfx {
@@ -123,6 +124,8 @@ pub struct App {
     target: HWND,
     /// The window the hook says is being dragged; preferred over guessing from the pointer.
     hook_target: HWND,
+    /// The snap being verified (target and what it should look like).
+    verifying: Option<(HWND, Verify)>,
     /// Test-only override of the monitor work area (isolated builds).
     test_rect: Option<Rect>,
 }
@@ -168,6 +171,7 @@ impl App {
             msg_target: register(names::MSG_TARGET),
             target: HWND::default(),
             hook_target: HWND::default(),
+            verifying: None,
             test_rect,
         })
     }
@@ -200,8 +204,15 @@ impl App {
         } else if msg == WM_TIMER && wparam.0 == TIMER_ID {
             // SAFETY: plain query.
             let primary = if unsafe { GetSystemMetrics(SM_SWAPBUTTON) } != 0 { VK_RBUTTON } else { VK_LBUTTON };
-            let effects = self.machine.on_tick(key_down(VK_ESCAPE.0.into()), key_down(primary.0.into()));
+            // The button state alone is not enough to call a drag finished: touch and pen
+            // drags don't set it, and even after the release the target may still be inside
+            // its move loop. Snapping then races the loop's own final SetWindowPos.
+            let dragging = key_down(primary.0.into()) || in_move_size(self.target);
+            let effects = self.machine.on_tick(key_down(VK_ESCAPE.0.into()), dragging);
             self.run(effects);
+            Some(LRESULT(0))
+        } else if msg == WM_TIMER && wparam.0 == VERIFY_TIMER_ID {
+            self.verify_tick();
             Some(LRESULT(0))
         } else {
             None
@@ -299,6 +310,8 @@ impl App {
     }
 
     fn begin(&mut self, mode: Mode, center: Point) -> Result<()> {
+        // A new drag supersedes any verification still running for the previous snap.
+        self.stop_verifying();
         let detected = if is_window(self.hook_target) { self.hook_target } else { self.detect_target() };
         if !detected.0.is_null() {
             self.target = detected;
@@ -432,8 +445,20 @@ impl App {
             "Snap: Target=0x{:08X}, min=({},{}), max=({},{}), rect=({},{},{},{}), prev={previous:?}, cur={current:?}",
             target.0 as usize, cells.min_x, cells.min_y, cells.max_x, cells.max_y, r.x, r.y, r.w, r.h
         ));
+        self.apply(target, r);
+        self.verifying = Some((target, Verify::new(r)));
+        // SAFETY: timer on our own window.
+        unsafe { SetTimer(Some(self.hwnd), VERIFY_TIMER_ID, VERIFY_TICK_MS, None) };
+    }
+
+    /// Hands the rectangle to the target's own thread (asynchronously, so a hung window can
+    /// never block the overlay). A maximized window is restored first.
+    fn apply(&self, target: HWND, r: SnapRect) {
         // SAFETY: repositioning another window asynchronously, as the legacy overlay did.
         unsafe {
+            if IsZoomed(target).as_bool() {
+                let _ = ShowWindowAsync(target, SW_RESTORE);
+            }
             let _ = SetWindowPos(
                 target,
                 None,
@@ -445,11 +470,75 @@ impl App {
             );
         }
     }
+
+    fn stop_verifying(&mut self) {
+        if self.verifying.take().is_some() {
+            // SAFETY: timer on our own window.
+            unsafe {
+                let _ = KillTimer(Some(self.hwnd), VERIFY_TIMER_ID);
+            }
+        }
+    }
+
+    /// Checks that the snapped window stayed where it was put, and puts it back if not.
+    fn verify_tick(&mut self) {
+        let Some((target, mut verify)) = self.verifying else {
+            self.stop_verifying();
+            return;
+        };
+        if !is_window(target) || self.machine.mode() != Mode::Idle {
+            self.stop_verifying();
+            return;
+        }
+        let mut wr = RECT::default();
+        // SAFETY: valid out pointer.
+        let ok = unsafe { GetWindowRect(target, &mut wr).is_ok() };
+        // SAFETY: plain query.
+        let zoomed = unsafe { IsZoomed(target).as_bool() };
+        let step = if ok { verify.tick(rect_of(wr), zoomed, in_move_size(target)) } else { VerifyStep::GiveUp };
+        match step {
+            VerifyStep::Wait => {}
+            VerifyStep::Done => {
+                if verify.reapplied() > 0 {
+                    log(&format!("Snap: Target=0x{:08X} needed {} correction(s)", target.0 as usize, verify.reapplied()));
+                }
+                self.stop_verifying();
+                return;
+            }
+            VerifyStep::Reapply => self.apply(target, verify.want),
+            VerifyStep::GiveUp => {
+                let w = verify.want;
+                log(&format!(
+                    "Snap: Target=0x{:08X} did not settle at ({},{},{},{}): now ({},{},{},{}), zoomed={zoomed}",
+                    target.0 as usize, w.x, w.y, w.w, w.h, wr.left, wr.top, wr.right - wr.left, wr.bottom - wr.top
+                ));
+                self.stop_verifying();
+                return;
+            }
+        }
+        self.verifying = Some((target, verify));
+    }
 }
 
 fn is_window(h: HWND) -> bool {
     // SAFETY: plain query; any handle value is acceptable.
     !h.0.is_null() && unsafe { IsWindow(Some(h)).as_bool() }
+}
+
+/// True while the window's thread is inside the modal move/size loop.
+fn in_move_size(h: HWND) -> bool {
+    if h.0.is_null() {
+        return false;
+    }
+    // SAFETY: valid out pointer with `cbSize` set.
+    unsafe {
+        let tid = GetWindowThreadProcessId(h, None);
+        if tid == 0 {
+            return false;
+        }
+        let mut info = GUITHREADINFO { cbSize: std::mem::size_of::<GUITHREADINFO>() as u32, ..Default::default() };
+        GetGUIThreadInfo(tid, &mut info).is_ok() && info.flags.0 & GUI_INMOVESIZE.0 != 0
+    }
 }
 
 unsafe extern "system" fn wnd_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
