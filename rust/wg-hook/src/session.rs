@@ -22,6 +22,9 @@ pub const SWP_NOMOVE: u32 = 0x0002;
 pub enum Msg {
     ShowGrid,
     Area,
+    /// `wParam` = the dragged window's handle, so the overlay snaps exactly that window
+    /// instead of guessing from the pointer position.
+    Target,
 }
 
 /// Geometry of the monitor the pointer is on.
@@ -122,6 +125,7 @@ pub struct Session {
     moving_msg: i32,
     /// Last mode posted (-1 = nothing yet).
     prev_mode: i32,
+    target_posted: bool,
     nudge: i32,
     monitor: isize,
     geometry: MonitorGeometry,
@@ -146,6 +150,7 @@ impl Session {
             ended: false,
             moving_msg: 0,
             prev_mode: -1,
+            target_posted: false,
             nudge: 1,
             monitor: 0,
             geometry: MonitorGeometry::default(),
@@ -338,6 +343,12 @@ impl Session {
         }
         let overlay = self.cfg.overlay;
 
+        if !self.target_posted {
+            // Posted ahead of the first ShowGrid (same queue, so it arrives first).
+            self.target_posted = true;
+            host.post_overlay(overlay, Msg::Target, self.cfg.hwnd as u32 as usize, 0);
+        }
+
         if monitor_changed || mode_changed {
             let c = layout.center();
             host.post_overlay(overlay, Msg::ShowGrid, mode as usize + 1, sign_extend(pack_point(c.x, c.y)));
@@ -375,6 +386,7 @@ mod tests {
         window: Rect,
         frame: Option<Rect>,
         posted: std::vec::Vec<(Msg, usize, isize)>,
+        targets: std::vec::Vec<usize>,
         cursor_sets: std::vec::Vec<(i32, i32)>,
         raised: u32,
     }
@@ -394,6 +406,10 @@ mod tests {
             WindowMetrics { window: self.window, frame: self.frame, maximized: false }
         }
         fn post_overlay(&mut self, _o: isize, msg: Msg, w: usize, l: isize) {
+            if msg == Msg::Target {
+                self.targets.push(w);
+                return;
+            }
             self.posted.push((msg, w, l));
         }
         fn set_cursor_pos(&mut self, x: i32, y: i32) {
@@ -522,6 +538,20 @@ mod tests {
         assert_eq!(h.posted[0].0, Msg::Area);
         assert_eq!(h.posted[0].1, pack_point(6, 2));
         assert_eq!(h.posted[0].2, pack_point(9, 5) as isize);
+    }
+
+    #[test]
+    fn the_dragged_window_is_announced_once_before_the_first_grid_message() {
+        let mut s = Session::new(config(false, true));
+        let mut h = host_at(1000, 400);
+        s.on_moving(&mut h);
+        input(&mut s, &mut h, SPACE, true, false);
+        s.on_window_pos_changing(&mut h);
+        h.cursor = Point::new(1500, 900);
+        s.on_window_pos_changing(&mut h);
+        input(&mut s, &mut h, CTRL, true, false);
+        s.on_window_pos_changing(&mut h);
+        assert_eq!(h.targets, [100], "once per drag, carrying the hwnd");
     }
 
     #[test]

@@ -19,6 +19,7 @@ macro_rules! pick {
 
 pub const MSG_SHOW_GRID: &str = pick!("WindowGridShowGrid", "WindowGridIsoShowGrid");
 pub const MSG_AREA: &str = pick!("WindowGridArea", "WindowGridIsoArea");
+pub const MSG_TARGET: &str = pick!("WindowGridTarget", "WindowGridIsoTarget");
 pub const MSG_STOP: &str = pick!("WindowGridStop", "WindowGridIsoStop");
 
 pub const MAP_HOOK: &str = pick!("WindowGridMapping_Hook", "WindowGridIsoMapping_Hook");

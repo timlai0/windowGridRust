@@ -54,6 +54,7 @@ static ORIG_PROC: AtomicIsize = AtomicIsize::new(0);
 static EVENT_HOOK: AtomicIsize = AtomicIsize::new(0);
 static MSG_SHOW_GRID: AtomicU32 = AtomicU32::new(0);
 static MSG_AREA: AtomicU32 = AtomicU32::new(0);
+static MSG_TARGET: AtomicU32 = AtomicU32::new(0);
 static MSG_STOP: AtomicU32 = AtomicU32::new(0);
 
 /// Runs `f` on the session, if one exists.
@@ -127,6 +128,7 @@ impl Host for RealHost {
         let id = match msg {
             Msg::ShowGrid => MSG_SHOW_GRID.load(Ordering::Relaxed),
             Msg::Area => MSG_AREA.load(Ordering::Relaxed),
+            Msg::Target => MSG_TARGET.load(Ordering::Relaxed),
         };
         if id != 0 {
             // SAFETY: plain call; failure (overlay gone) is harmless.
@@ -165,6 +167,7 @@ fn register_messages() {
     unsafe {
         MSG_SHOW_GRID.store(sys::RegisterWindowMessageW(name!("WindowGridShowGrid", "WindowGridIsoShowGrid")), Ordering::Relaxed);
         MSG_AREA.store(sys::RegisterWindowMessageW(name!("WindowGridArea", "WindowGridIsoArea")), Ordering::Relaxed);
+        MSG_TARGET.store(sys::RegisterWindowMessageW(name!("WindowGridTarget", "WindowGridIsoTarget")), Ordering::Relaxed);
         MSG_STOP.store(sys::RegisterWindowMessageW(name!("WindowGridStop", "WindowGridIsoStop")), Ordering::Relaxed);
     }
 }

@@ -19,6 +19,7 @@ pub const MAP_GRID_WINDOW_HANDLE: &str = "WindowGridMapping_GridWindowHandle";
 
 pub const MSG_SHOW_GRID: &str = "WindowGridShowGrid";
 pub const MSG_AREA: &str = "WindowGridArea";
+pub const MSG_TARGET: &str = "WindowGridTarget";
 pub const MSG_STOP: &str = "WindowGridStop";
 
 pub const LOG_MUTEX: &str = "Global\\WindowGridLog";

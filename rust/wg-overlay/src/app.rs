@@ -119,7 +119,10 @@ pub struct App {
     msg_show: u32,
     msg_area: u32,
     msg_stop: u32,
+    msg_target: u32,
     target: HWND,
+    /// The window the hook says is being dragged; preferred over guessing from the pointer.
+    hook_target: HWND,
     /// Test-only override of the monitor work area (isolated builds).
     test_rect: Option<Rect>,
 }
@@ -162,7 +165,9 @@ impl App {
             msg_show: register(names::MSG_SHOW_GRID),
             msg_area: register(names::MSG_AREA),
             msg_stop: register(names::MSG_STOP),
+            msg_target: register(names::MSG_TARGET),
             target: HWND::default(),
+            hook_target: HWND::default(),
             test_rect,
         })
     }
@@ -181,6 +186,10 @@ impl App {
             if let Some(e) = self.machine.on_area(Cells::from_corners(sx, sy, ex, ey)) {
                 self.run(vec![e]);
             }
+            Some(LRESULT(0))
+        } else if msg == self.msg_target {
+            // Same sign-extension the handle section uses for 32-bit values.
+            self.hook_target = HWND(wparam.0 as u32 as i32 as isize as *mut c_void);
             Some(LRESULT(0))
         } else if msg == self.msg_stop {
             // SAFETY: destroying our own window.
@@ -216,7 +225,10 @@ impl App {
                         let _ = KillTimer(Some(self.hwnd), TIMER_ID);
                     }
                 }
-                Effect::ClearTarget => self.target = HWND::default(),
+                Effect::ClearTarget => {
+                    self.target = HWND::default();
+                    self.hook_target = HWND::default();
+                }
                 Effect::Begin { mode, center } => {
                     if let Err(e) = self.begin(mode, center) {
                         log(&format!("Begin failed: {e}"));
@@ -287,7 +299,7 @@ impl App {
     }
 
     fn begin(&mut self, mode: Mode, center: Point) -> Result<()> {
-        let detected = self.detect_target();
+        let detected = if is_window(self.hook_target) { self.hook_target } else { self.detect_target() };
         if !detected.0.is_null() {
             self.target = detected;
         }
@@ -433,6 +445,11 @@ impl App {
             );
         }
     }
+}
+
+fn is_window(h: HWND) -> bool {
+    // SAFETY: plain query; any handle value is acceptable.
+    !h.0.is_null() && unsafe { IsWindow(Some(h)).as_bool() }
 }
 
 unsafe extern "system" fn wnd_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {

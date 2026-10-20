@@ -90,6 +90,7 @@ Holds the overlay `HWND` as a 32-bit integer (`i32`).
 
 - **`WindowGridShowGrid`:** Posted by `wg-hook` to the overlay `HWND`. `wParam`: `1` (`Resize`), `2` (`Move`), or `0` (`End` — drag finished, execute snap and hide). `lParam`: packed `(x, y)` center of the target monitor work area.
 - **`WindowGridArea`:** Posted by `wg-hook` to the overlay `HWND` when selected cells change. `wParam`: packed `(start_x, start_y)` or `(left, top)`. `lParam`: packed `(cur_x, cur_y)` or `(right, bottom)`.
+- **`WindowGridTarget`:** Posted by `wg-hook` once per drag, ahead of the first `WindowGridShowGrid`. `wParam`: the dragged window's `HWND` (32 bits). The overlay snaps exactly that window; without it (older hook) it falls back to the window under the pointer.
 - **`WindowGridStop`:** Broadcast via `PostMessageW(HWND_BROADCAST, ...)` by `wg-app` to cleanly terminate running overlay and `rundll32` hook hosts.
 
 ## 3. Security & Reliability Constraints
