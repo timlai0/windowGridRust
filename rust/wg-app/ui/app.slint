@@ -830,7 +830,7 @@ export component SettingsWindow inherits Window {
                         }
                         Fact {
                             title: "Talking to each other";
-                            body: "Shared memory carries the settings; three registered window messages signal show, area and stop.";
+                            body: "Shared memory carries the settings; four registered window messages signal target, show, area and stop.";
                         }
                     }
                     Card {
@@ -847,7 +847,7 @@ export component SettingsWindow inherits Window {
                     }
                 }
                 Text {
-                    text: "Built for x64, x86 and ARM64. Only the x64 hook is drag-tested; the ARM64 one builds but has never run on real hardware. Settings keep the original WindowGrid.settings format. Details: docs/adr 005\u{2013}007.";
+                    text: "Built for x64, x86 and ARM64. Only the x64 hook is drag-tested; the ARM64 one builds but has never run on real hardware. Settings keep the original WindowGrid.settings format. Details: docs/adr 003\u{2013}008.";
                     color: Palette.foreground;
                     opacity: 0.55;
                     font-size: 12px;
