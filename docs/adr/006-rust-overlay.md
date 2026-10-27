@@ -1,11 +1,12 @@
 # ADR 006: Rust Overlay (`wg-overlay`)
 
-**Date:** 2026-10-14
-**Status:** Accepted (implemented; verified with the real Rust hook in real drags)
+**Date:** 2026-10-14  
+**Amended:** 2026-10-20  
+**Status:** Accepted
 
 ## Context
 
-The C# overlay (`WindowGridOverlay.exe`) is a WPF `AllowsTransparency` window. WPF renders such a window on the GPU, copies each frame back to system memory and hands it to Windows as a layered-window bitmap; it also carries the whole .NET runtime. Measured on a running installation: 71 MB executable, **219 MB working set (267 MB private)**. (The README's "Direct3D GPU-rendered overlay" claim described the rendering path inaccurately.)
+The legacy C# overlay (`WindowGridOverlay.exe`) was a WPF `AllowsTransparency` window. WPF renders such a window on the GPU, copies each frame back to system memory, and hands it to Windows as a layered-window bitmap; it also carries the .NET runtime. Measured on a running installation: 71 MB executable, **219 MB working set (267 MB private)**.
 
 ## Decisions
 
@@ -21,7 +22,7 @@ The C# overlay (`WindowGridOverlay.exe`) is a WPF `AllowsTransparency` window. W
 - `BlurRadius` is the selection shadow's blur in device-independent pixels divided by 6, i.e. shadow blur = `6 x BlurRadius` (the default 3 reproduces the legacy fixed 18 px; 0 disables the shadow).
 - `Anchor = GrabPoint`: when the snapped window is larger than the selection (and the drag was a move), it extends *away from the pointer*: with the pointer at the left/top edge of the selection the extra size goes right/down, at the right/bottom edge left/up, proportionally in between. `Center` and `TopLeft` are unchanged. Anchors still do not apply in Resize mode, as before.
 
-**Safety net.** The 15 ms timer now runs in both Resize and Move mode (it only ran in Resize before). Esc cancels either kind of drag, and a drag end with Esc held does not snap. Before, Esc during a Move drag was cancelled by the system but the overlay still snapped when the drag ended. Releasing the primary mouse button for five consecutive ticks still snaps as a fallback, resolving the primary button through `SM_SWAPBUTTON`.
+**Safety net & target resolution.** The 15 ms timer runs in both Resize and Move mode (it only ran in Resize before). Esc cancels either kind of drag, and a drag end with Esc held does not snap. Releasing the primary mouse button (resolved through `SM_SWAPBUTTON`) and exiting the modal move/size loop (`GetGUIThreadInfo` / `GUI_INMOVESIZE`) for five consecutive ticks snaps as a fallback. The overlay resolves the target window from the `WindowGridTarget` message posted by `wg-hook` (falling back to pointer detection only when absent), restores maximized windows (`ShowWindowAsync(SW_RESTORE)`), and runs a 40 ms post-snap verification loop (`snap::Verify`) that re-applies the rectangle up to 3 times if displaced by Aero Snap, DPI scaling, or `WM_EXITSIZEMOVE` handling ([ADR 008](008-snap-target-and-placement-verification.md)).
 
 **Size preservation fix.** The legacy snap preserved a moved window's *rectangle* size and then added the invisible DWM resize borders on top, so every Move snap grew the window's visible size by about 14 x 7 px. Sizes are now measured on the visible frame whenever margin compensation applies (also for the `Center`/`GrabPoint` oversize comparison); a unit test and the real-drag test pin this.
 

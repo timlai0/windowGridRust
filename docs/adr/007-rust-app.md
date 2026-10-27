@@ -1,11 +1,12 @@
 # ADR 007: Rust App (`wg-app`)
 
-**Date:** 2026-10-14
-**Status:** Accepted (implemented and tested in isolation; not yet run as the user's real installation)
+**Date:** 2026-10-14  
+**Amended:** 2026-10-20  
+**Status:** Accepted
 
 ## Context
 
-The C# app (`WindowGrid.exe`) is a 141 MB self-contained WPF program that holds the settings window, tray icon, installer and the supervision of the overlay and hook DLLs. Measured on a running installation: **245 MB working set for the app plus 213 MB for its overlay**, before the two hook hosts.
+The legacy C# app (`WindowGrid.exe`) was a 141 MB self-contained WPF program hosting the settings window, tray icon, installer, and supervision of the overlay and hook DLLs. Measured on a running installation: **245 MB working set for the app plus 213 MB for its overlay**, before the two hook hosts.
 
 ## Decisions
 
@@ -38,13 +39,10 @@ The C# app (`WindowGrid.exe`) is a 141 MB self-contained WPF program that holds 
 | Overlay, idle | 213 MB | 9 MB |
 | Hook hosts | not measured | 8-9 MB each |
 
-Verified: 47 unit tests; headless renders of every window reviewed as images; an end-to-end suite that runs the real (isolated) executable: first-run extraction, shared-memory publication, overlay and both hook hosts started, a killed overlay restarted, killing the app takes all helpers with it, clean quit, `/install` copying and relaunching the installed copy from its directory, and the settings window opening on the real desktop (rendered with the real winit backend, in the system's dark theme).
+Verified: 47 unit tests; headless renders of every window reviewed as images; an end-to-end suite (`wg-app --test lifecycle`) that runs the real (isolated) executable: first-run extraction, shared-memory publication, overlay and both hook hosts started, a killed overlay restarted, killing the app takes all helpers with it, clean quit, `/install` copying and relaunching the installed copy from its directory, and the settings window opening on the real desktop (rendered with the real winit backend, in the system's dark theme); plus `wg-e2e` (`real_drags_supervised_by_the_app`) verifying all four real-drag scenarios (resize with deferral, move preserving size, Esc cancel, and live resize) under full `wg-app` supervision.
 
-## Not verified / open items
+## Open items
 
-- **Not run as the real installation:** it uses the same single-instance name as the C# app, so starting it replaces a running WindowGrid. Do that deliberately.
-- Elevated installs (UAC), the Start Menu shortcut in the all-users folder, and creating the scheduled task need administrator rights and were not exercised live. Their pieces are tested separately (shortcut creation and resolution in a temporary folder, the task XML, the `Run` value in a scratch registry key, the install sequence with a fake).
-- Tray interaction (menu, double-click) was not driven automatically; the icon is created and the settings window open path is exercised.
-- ~~The real hook + overlay drag test was run only against harness-started processes.~~ Done 2026-10-14: `cargo test -p wg-e2e --test drag real_drags_supervised_by_the_app -- --ignored` has the isolated `wg-app` extract, configure from its settings file and supervise the overlay and both hook hosts, and all four scenarios pass (resize with deferral, move keeps the size, Esc restores, live resize with deferral off), 1 run.
-- ARM64: the x64 hook host is not started on ARM64 Windows (how to launch an emulated `rundll32` there is unverified), and nothing ARM64 has been run.
-- The Rust code is written from the C# app's observable behavior, but the question of the original project's copyright (2014-2016) is still open.
+- Elevated installs (UAC), the Start Menu shortcut in the all-users folder, and creating the scheduled task require administrator rights and are tested in isolation via unit/component tests (shortcut creation and resolution in a temporary folder, task XML generation, `Run` registry value in a scratch key, and `InstallPorts` sequence verification) rather than unprompted elevation during `cargo test`.
+- Tray menu and double-click interactions are verified at the window/callback boundary rather than via synthetic shell tray clicks.
+- ARM64: the x64 hook host is not started on ARM64 Windows (how to launch an emulated `rundll32` there is unverified), and ARM64 binaries have not yet been executed on physical ARM64 hardware.

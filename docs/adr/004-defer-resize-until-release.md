@@ -1,7 +1,7 @@
 # ADR 004: Defer Window Resize Until Drag Release
 
 **Date:** 2026-10-09  
-**Amended:** 2026-10-11  
+**Amended:** 2026-10-20  
 **Status:** Accepted  
 
 ## Context
@@ -19,8 +19,8 @@ For complex and GPU-accelerated applications (such as Chromium-based browsers, E
    - In `WM_WINDOWPOSCHANGING` (`0x46`): When deferral is enabled, bypasses `WINDOWPOS.cx`/`cy` updates and leaves `SWP_NOSIZE` intact.
 4. **Target HWND Tracking and Final Snap Execution (`wg-overlay`):**
    - **Snap trigger is drag end, not hotkey release.** Activating grid mode with Space or Right Mouse Button is a momentary toggle (tap/click): releasing that input does **not** terminate the drag. The overlay stays visible and interactive for the entire drag.
-   - `wg-hook` posts `WindowGridShowGrid(0, 0)` (`Mode::End`) when the drag ends, which executes the single-shot `SetWindowPos` snap with DWM margin compensation, anchor alignment, and final grid bounding dimensions.
-   - **Safety-net fallback polling:** A 15 ms timer runs during active sessions so the overlay cannot leak if a hook message is lost. It cancels on `VK_ESCAPE`, and snaps only when the primary mouse button has been released for **5 consecutive ticks (~75 ms debounce)**, resolving the primary button via `GetSystemMetrics(SM_SWAPBUTTON)`.
+   - `wg-hook` announces the exact dragged `HWND` via `WindowGridTarget` before the first `WindowGridShowGrid` message, and posts `WindowGridShowGrid(0, 0)` (`Mode::Idle`) when the drag ends. `wg-overlay` then restores the window if maximized (`ShowWindowAsync(SW_RESTORE)`), executes `SetWindowPos` with DWM margin compensation and anchor alignment, and verifies placement via the post-snap `Verify` poll loop ([ADR 008](008-snap-target-and-placement-verification.md)).
+   - **Safety-net fallback polling:** A 15 ms timer runs during active sessions so the overlay cannot leak if a hook message is lost. It cancels on `VK_ESCAPE`, and snaps only when the primary mouse button (resolved via `GetSystemMetrics(SM_SWAPBUTTON)`) has been released and the target thread has exited its modal move/size loop (`GetGUIThreadInfo` / `GUI_INMOVESIZE`) for **5 consecutive ticks (~75 ms debounce)**.
 
 ## Consequences
 

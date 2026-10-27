@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- The final window size and position were sometimes not applied when a drag ended.
+- The final window size and position were sometimes not applied when a drag ended ([ADR 008](docs/adr/008-snap-target-and-placement-verification.md)).
   - The hook now tells the overlay which window is being dragged (`WindowGridTarget`) instead of the overlay guessing from the pointer position.
   - The overlay now checks that the snapped window stayed put and re-applies the rectangle (restoring maximized windows first) when something moved it back, such as an Aero Snap at the screen edge, a DPI change between monitors or the app's own exit-move handling. It logs when a window refuses.
   - The safety-net fallback no longer snaps while the target is still inside its move/size loop, which raced the loop's own final positioning (touch and pen drags in particular).
