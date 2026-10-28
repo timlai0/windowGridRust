@@ -42,7 +42,7 @@ fn do_install(exe: &Path, config: &Config, dir: Option<PathBuf>, shortcut: bool,
     match installer::install(&mut ports(exe, config), exe, dir, shortcut, autostart) {
         Ok(Outcome::Elevated(true)) => true,
         Ok(Outcome::Elevated(false)) => {
-            dialogs::tell("WindowGrid", "Install failed: administrator permission is required for that folder.", true);
+            dialogs::tell("WindowGridRust", "Install failed: administrator permission is required for that folder.", true);
             true
         }
         Ok(Outcome::Installed { target, restarted }) => {
@@ -51,7 +51,7 @@ fn do_install(exe: &Path, config: &Config, dir: Option<PathBuf>, shortcut: bool,
         }
         Err(e) => {
             log(&format!("Install failed: {e}"));
-            dialogs::tell("WindowGrid", &format!("Install failed: {e}"), true);
+            dialogs::tell("WindowGridRust", &format!("Install failed: {e}"), true);
             true
         }
     }
@@ -71,7 +71,7 @@ fn setup_dialog(exe: &Path, work_dir: &Path, config: &mut Config, initial: Optio
         move |choice| *res.borrow_mut() = choice,
     );
     let Ok(dialog) = dialog else {
-        dialogs::tell("WindowGrid", "The setup window could not be opened.", true);
+        dialogs::tell("WindowGridRust", "The setup window could not be opened.", true);
         return true;
     };
     let _ = slint::run_event_loop();
@@ -96,7 +96,7 @@ pub fn run() -> i32 {
     let (exe, work_dir) = match exe_and_dir() {
         Ok(v) => v,
         Err(e) => {
-            dialogs::tell("WindowGrid", &format!("Cannot determine where WindowGrid is running from: {e}"), true);
+            dialogs::tell("WindowGridRust", &format!("Cannot determine where WindowGridRust is running from: {e}"), true);
             return 1;
         }
     };
@@ -113,7 +113,7 @@ pub fn run() -> i32 {
 
     match command {
         Command::Help => {
-            dialogs::tell("WindowGrid Usage", USAGE, false);
+            dialogs::tell("WindowGridRust Usage", USAGE, false);
             return 0;
         }
         Command::Install { dir, silent, shortcut, autostart } => {
@@ -127,7 +127,7 @@ pub fn run() -> i32 {
         Command::Replace { path } => {
             let mut p = ports(&exe, &config);
             if let Err(e) = installer::replace(&mut p, &exe, &path) {
-                dialogs::tell("WindowGrid", &format!("Replace failed: {e}"), true);
+                dialogs::tell("WindowGridRust", &format!("Replace failed: {e}"), true);
             }
             return 0;
         }
@@ -138,7 +138,7 @@ pub fn run() -> i32 {
         LoadState::Loaded => {}
         LoadState::Missing => {
             let skip = test_flag("WG_TEST_NO_PROMPT");
-            if !skip && dialogs::ask("WindowGrid", "Would you like to run the setup for WindowGrid?") {
+            if !skip && dialogs::ask("WindowGridRust", "Would you like to run the setup for WindowGridRust?") {
                 if setup_dialog(&exe, &work_dir, &mut config, None) {
                     return 0;
                 }
@@ -149,7 +149,7 @@ pub fn run() -> i32 {
         LoadState::Invalid(why) => {
             log(&format!("Settings file unusable ({why}); using defaults"));
             if !test_flag("WG_TEST_NO_PROMPT") {
-                dialogs::tell("WindowGrid", &format!("The settings file could not be read ({why}). Defaults are used until you save."), false);
+                dialogs::tell("WindowGridRust", &format!("The settings file could not be read ({why}). Defaults are used until you save."), false);
             }
         }
     }
@@ -170,7 +170,7 @@ fn run_tray_app(_exe: PathBuf, work_dir: PathBuf, config: Config) -> i32 {
     let shared = match Shared::create() {
         Ok(s) => s,
         Err(e) => {
-            dialogs::tell("WindowGrid", &format!("Could not create the shared memory the hooks need: {e}"), true);
+            dialogs::tell("WindowGridRust", &format!("Could not create the shared memory the hooks need: {e}"), true);
             return 1;
         }
     };
@@ -181,18 +181,18 @@ fn run_tray_app(_exe: PathBuf, work_dir: PathBuf, config: Config) -> i32 {
     let (supervisor, problems) = match Supervisor::start(supervisor::specs(&work_dir, machine)) {
         Ok(v) => v,
         Err(e) => {
-            dialogs::tell("WindowGrid", &format!("Could not start the helper processes: {e}"), true);
+            dialogs::tell("WindowGridRust", &format!("Could not start the helper processes: {e}"), true);
             return 1;
         }
     };
     if !problems.is_empty() {
         log(&format!("Startup problems: {problems:?}"));
-        dialogs::tell("WindowGrid", &format!("Some parts of WindowGrid are missing:\n\n{}", problems.join("\n")), true);
+        dialogs::tell("WindowGridRust", &format!("Some parts of WindowGridRust are missing:\n\n{}", problems.join("\n")), true);
     }
 
     let splash = config.settings.app.splash_screen;
     let state = Rc::new(RefCell::new(AppState { config, shared: Some(shared) }));
-    let paths = Paths { work_dir: work_dir.clone(), log_file: work_dir.join("WindowGrid.log"), version: VERSION.to_string() };
+    let paths = Paths { work_dir: work_dir.clone(), log_file: work_dir.join("WindowGridRust.log"), version: VERSION.to_string() };
     if splash {
         let _ = ui::show_splash(Duration::from_millis(1500));
     }
@@ -259,7 +259,7 @@ fn run_tray_app(_exe: PathBuf, work_dir: PathBuf, config: Config) -> i32 {
         }
     };
 
-    let tray = Tray::create("WindowGrid", {
+    let tray = Tray::create("WindowGridRust", {
         let (quit, open_settings) = (quit.clone(), open_settings.clone());
         move |event| match event {
             TrayEvent::Settings => open_settings(),

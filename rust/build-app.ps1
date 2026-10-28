@@ -1,16 +1,16 @@
 <#
 .SYNOPSIS
-  Builds the complete Rust WindowGrid: hook DLLs, overlay, then the app that embeds them.
+  Builds the complete Rust WindowGridRust: hook DLLs, overlay, then the app that embeds them.
 
 .DESCRIPTION
-  Produces dist\WindowGrid.exe, a single executable that contains the overlay and the hook
+  Produces dist\WindowGridRust.exe, a single executable that contains the overlay and the hook
   DLLs and extracts them next to itself on start. (The components are also left in dist\.)
 
   Like build-overlay.ps1 this needs the GNU target's linker plus binutils (dlltool, as and,
   for the icon, windres) from MSYS2; pass -BinutilsDir if it is not in C:\msys64\ucrt64\bin.
 
   With -Isolated everything uses test-only names (see rust\README.md) and goes to dist-iso\,
-  so it can run next to a real WindowGrid without interfering with it.
+  so it can run next to a real WindowGridRust without interfering with it.
 #>
 param(
     [switch]$Isolated,
@@ -44,5 +44,5 @@ if ($Isolated) {
 
 cargo build -p wg-app --release --target-dir $targetDir @features
 if ($LASTEXITCODE -ne 0) { throw 'build failed' }
-Copy-Item "$targetDir\release\wg-app.exe" "$outDir\WindowGrid.exe" -Force
-'{0,-24} {1,12:N0} bytes' -f 'WindowGrid.exe', (Get-Item "$outDir\WindowGrid.exe").Length
+Copy-Item "$targetDir\release\wg-app.exe" "$outDir\WindowGridRust.exe" -Force
+'{0,-24} {1,12:N0} bytes' -f 'WindowGridRust.exe', (Get-Item "$outDir\WindowGridRust.exe").Length

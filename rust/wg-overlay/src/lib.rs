@@ -1,4 +1,4 @@
-//! WindowGrid overlay: the pure logic lives here and is unit-tested; the Windows glue
+//! WindowGridRust overlay: the pure logic lives here and is unit-tested; the Windows glue
 //! (window, GPU rendering, shared memory) sits alongside it.
 
 pub mod geom;

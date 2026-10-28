@@ -1,6 +1,6 @@
-//! Appends lines to `WindowGrid.log` (next to the DLL), in the format shared with the app:
+//! Appends lines to `WindowGridRust.log` (next to the DLL), in the format shared with the app:
 //! `HH:mm:ss.fff [X64] (PPPPP:TTTTT) rundll32.exe        : message`. Writers hold the
-//! named mutex `Global\WindowGridLog` for up to 250 ms. Used for lifecycle events and
+//! named mutex `Global\WindowGridRustLog` for up to 250 ms. Used for lifecycle events and
 //! failures only, never on the per-message hot path.
 //!
 //! No `core::fmt`: integer formatting there needs 64-bit division helpers that the
@@ -84,7 +84,7 @@ fn exe_name(out: &mut Buf<32>) {
     }
 }
 
-/// Path of `WindowGrid.log` beside this DLL, as NUL-terminated UTF-16.
+/// Path of `WindowGridRust.log` beside this DLL, as NUL-terminated UTF-16.
 fn log_path(out: &mut [u16; 300]) -> bool {
     // SAFETY: buffer and length describe `out`.
     let n = unsafe { sys::GetModuleFileNameW(module(), out.as_mut_ptr(), 280) } as usize;
@@ -92,7 +92,7 @@ fn log_path(out: &mut [u16; 300]) -> bool {
         return false;
     }
     let dir_end = out[..n].iter().rposition(|&c| c == b'\\' as u16).map_or(0, |i| i + 1);
-    for (i, &b) in b"WindowGrid.log\0".iter().enumerate() {
+    for (i, &b) in b"WindowGridRust.log\0".iter().enumerate() {
         out[dir_end + i] = u16::from(b);
     }
     true
@@ -154,7 +154,7 @@ fn write_record(msg: &str, code: Option<u32>) {
     }
     // SAFETY: all pointers are to live, NUL-terminated or sized buffers.
     unsafe {
-        let mutex = sys::CreateMutexW(core::ptr::null(), 0, wide!("Global\\WindowGridLog"));
+        let mutex = sys::CreateMutexW(core::ptr::null(), 0, wide!("Global\\WindowGridRustLog"));
         let locked = mutex != 0 && sys::WaitForSingleObject(mutex, 250) == sys::WAIT_OBJECT_0;
         let file = sys::CreateFileW(
             path.as_ptr(),

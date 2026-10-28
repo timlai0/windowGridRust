@@ -1,15 +1,15 @@
 # Rust Workspace Guide
 
-Developer reference for the Cargo workspace in `rust/`. For product overview, user features, CLI options, and `WindowGrid.settings` configuration, see the root [`README.md`](../README.md).
+Developer reference for the Cargo workspace in `rust/`. For product overview, user features, CLI options, and `WindowGridRust.settings` configuration, see the root [`README.md`](../README.md).
 
 ## Crates & Module Layout
 
 | Crate | Purpose | Key Modules |
 |---|---|---|
 | `wg-core` | Settings serialization, IPC wire structs, key code tables, log format (`no_std` without default `std` feature). | `settings.rs`, `ipc.rs`, `keycode.rs`, `keycode_table.rs`, `json.rs`, `log.rs`, `names.rs` |
-| `wg-hook` | `WindowGrid64.dll`, `WindowGrid32.dll`, `WindowGridARM64.dll` (`RunDll`, in-context WinEvent hook, input hooks, window subclass; `no_std`, CRT-free). | `grid.rs` (pure math), `session.rs` (`Host` state machine), `entry.rs` (Win32 exports/callbacks), `sys.rs` (`raw-dylib`), `rt.rs` (CRT shims), `log.rs` |
-| `wg-overlay` | `WindowGridOverlay.exe`: click-through DirectComposition window rendered with Direct2D/DirectWrite, plus final window snap execution and post-snap placement verification. | `snap.rs` (`compute`, `Verify`), `hud.rs`, `state.rs`, `geom.rs`, `theme.rs` (pure logic), `gfx.rs` (Direct2D/DirectWrite), `app.rs` (window, messages, single instance) |
-| `wg-app` | `WindowGrid.exe`: Slint Fluent UI, system tray icon, CLI installer, and job-object supervisor; embeds the overlay and hook DLLs. | `args.rs`, `viewmodel.rs`, `config.rs`, `installer.rs` (pure logic), `winops.rs`, `autostart.rs`, `osopts.rs`, `tray.rs`, `ui.rs`, `app.rs`, `ui/app.slint` |
+| `wg-hook` | `WindowGridRust64.dll`, `WindowGridRust32.dll`, `WindowGridRustARM64.dll` (`RunDll`, in-context WinEvent hook, input hooks, window subclass; `no_std`, CRT-free). | `grid.rs` (pure math), `session.rs` (`Host` state machine), `entry.rs` (Win32 exports/callbacks), `sys.rs` (`raw-dylib`), `rt.rs` (CRT shims), `log.rs` |
+| `wg-overlay` | `WindowGridRustOverlay.exe`: click-through DirectComposition window rendered with Direct2D/DirectWrite, plus final window snap execution and post-snap placement verification. | `snap.rs` (`compute`, `Verify`), `hud.rs`, `state.rs`, `geom.rs`, `theme.rs` (pure logic), `gfx.rs` (Direct2D/DirectWrite), `app.rs` (window, messages, single instance) |
+| `wg-app` | `WindowGridRust.exe`: Slint Fluent UI, system tray icon, CLI installer, and job-object supervisor; embeds the overlay and hook DLLs. | `args.rs`, `viewmodel.rs`, `config.rs`, `installer.rs` (pure logic), `winops.rs`, `autostart.rs`, `osopts.rs`, `tray.rs`, `ui.rs`, `app.rs`, `ui/app.slint` |
 | `wg-win` | Shared Win32 helpers used by `wg-overlay` and `wg-app`. | `shm.rs`, `logger.rs`, `instance.rs`, `png.rs` |
 | `wg-e2e` | Real-drag integration test harness driving physical mouse and keyboard events via `SendInput` (`#[ignore]`d by default). | `tests/drag.rs` |
 
@@ -28,9 +28,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File build-app.ps1
 Or directly in PowerShell:
 
 ```powershell
-.\build-hooks.ps1    # Builds dist\WindowGrid64.dll, WindowGrid32.dll, WindowGridARM64.dll
-.\build-overlay.ps1  # Builds dist\WindowGridOverlay.exe
-.\build-app.ps1      # Builds hooks + overlay, then embeds them into dist\WindowGrid.exe
+.\build-hooks.ps1    # Builds dist\WindowGridRust64.dll, WindowGridRust32.dll, WindowGridRustARM64.dll
+.\build-overlay.ps1  # Builds dist\WindowGridRustOverlay.exe
+.\build-app.ps1      # Builds hooks + overlay, then embeds them into dist\WindowGridRust.exe
 ```
 
 - **Hook DLLs (`wg-hook`):** Link directly with `rust-lld` and `raw-dylib` imports (`.cargo/config.toml`), requiring no Visual Studio or Windows SDK and importing only `kernel32`, `user32`, and `dwmapi`.
@@ -38,7 +38,7 @@ Or directly in PowerShell:
 
 ## ARM64 Windows
 
-An in-context WinEvent hook requires a DLL matching the target process architecture. `wg-hook` builds `WindowGridARM64.dll` (`aarch64-pc-windows-msvc`, exports `RunDll`).
+An in-context WinEvent hook requires a DLL matching the target process architecture. `wg-hook` builds `WindowGridRustARM64.dll` (`aarch64-pc-windows-msvc`, exports `RunDll`).
 
 Status: builds and lints, not yet tested on ARM64 hardware. On ARM64 Windows, `wg-app` starts the native ARM64 and 32-bit `rundll32.exe` hosts; launching an emulated x64 `rundll32.exe` host on ARM64 and handling ARM64EC/ARM64X targets remain open items.
 
@@ -55,15 +55,15 @@ Offscreen PNG renders for visual inspection are written to `target\tmp\` by `car
 
 ### Isolated Process Tests (`--features isolated`)
 
-Because WindowGrid uses global mutexes, shared-memory sections, and broadcast window messages (`WindowGridStop`), running standard process tests alongside an active installation would stop or replace the running instance.
+Because WindowGridRust uses global mutexes, shared-memory sections, and broadcast window messages (`WindowGridRustStop`), running standard process tests alongside an active installation would stop or replace the running instance.
 
-Building or testing with `--features isolated` (or `-Isolated` on the build scripts, outputting to `dist-iso\`) switches all IPC identifiers to `WindowGridIso*` / `-iso` suffixes:
+Building or testing with `--features isolated` (or `-Isolated` on the build scripts, outputting to `dist-iso\`) switches all IPC identifiers to `WindowGridRustIso*` / `-iso` suffixes:
 
 ```cmd
 powershell -NoProfile -ExecutionPolicy Bypass -File build-app.ps1 -Isolated
 set "PATH=C:\msys64\ucrt64\bin;%PATH%"
 cargo test -p wg-overlay --features isolated
-cargo test -p wg-app --test lifecycle --features isolated
+cargo test -p wg-app --test lifecycle --features isolated -- --test-threads=1
 ```
 
 | Environment Variable | Crate | Description |
@@ -77,7 +77,7 @@ cargo test -p wg-app --test lifecycle --features isolated
 
 ### Real-Drag End-to-End Tests (`wg-e2e`)
 
-`wg-e2e` spawns a test window with the isolated hook and overlay and drives real mouse and keyboard input (`SendInput`) on the primary monitor for ~15 seconds. **Close any running WindowGrid instance first**, then run:
+`wg-e2e` spawns a test window with the isolated hook and overlay and drives real mouse and keyboard input (`SendInput`) on the primary monitor for ~15 seconds. **Close any running WindowGridRust instance first**, then run:
 
 ```cmd
 powershell -NoProfile -ExecutionPolicy Bypass -File build-app.ps1 -Isolated

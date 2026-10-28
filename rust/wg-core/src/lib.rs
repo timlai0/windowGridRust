@@ -1,4 +1,4 @@
-//! Shared building blocks for WindowGrid: the settings model and its legacy-compatible
+//! Shared building blocks for WindowGridRust: the settings model and its legacy-compatible
 //! JSON format, the IPC contract between the app, overlay and hook DLLs, and log helpers.
 //!
 //! With the default `std` feature everything is available. Without it the crate is

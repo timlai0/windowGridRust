@@ -1,4 +1,4 @@
-//! Typed wrappers for the numeric enums stored in `WindowGrid.settings`.
+//! Typed wrappers for the numeric enums stored in `WindowGridRust.settings`.
 //!
 //! The legacy file stores enums by name (`"KEY_SPACE"`, `"Resize"`, `"Control, Shift"`)
 //! and the legacy reader accepted plain integers too (`Enum.TryParse`), so parsing here

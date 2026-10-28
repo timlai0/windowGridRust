@@ -6,7 +6,7 @@
 //! cargo test -p wg-app --features isolated --test lifecycle -- --test-threads=1
 //! ```
 //! It shows a tray icon for a few seconds per scenario, and uses test-only names, so a
-//! running WindowGrid is unaffected.
+//! running WindowGridRust is unaffected.
 
 #![cfg(all(windows, feature = "isolated"))]
 
@@ -82,7 +82,7 @@ fn children_of(parent: u32) -> Vec<u32> {
 }
 
 fn log_of(dir: &Path) -> String {
-    std::fs::read_to_string(dir.join("WindowGrid.log")).unwrap_or_default()
+    std::fs::read_to_string(dir.join("WindowGridRust.log")).unwrap_or_default()
 }
 
 fn start_app(exe: &Path, extra: &[&str], quit_after_ms: Option<u64>) -> Kill {
@@ -113,7 +113,7 @@ fn starts_publishes_restarts_and_cleans_up() {
         return;
     }
     let work = temp_dir("run");
-    let exe = work.join("WindowGrid.exe");
+    let exe = work.join("WindowGridRust.exe");
     std::fs::copy(APP, &exe).unwrap();
 
     // The test reads the same sections the hooks and overlay use.
@@ -126,7 +126,7 @@ fn starts_publishes_restarts_and_cleans_up() {
 
     // 1. The overlay was extracted, started, and told us (via the section) where its window is.
     let first = wait_for("the overlay to publish its window", 20, || (overlay_hwnd(&hook) != 0).then(|| overlay_hwnd(&hook)));
-    for f in ["WindowGridOverlay.exe", "WindowGrid64.dll", "WindowGrid32.dll", "WindowGridARM64.dll", "WindowGrid.settings"] {
+    for f in ["WindowGridRustOverlay.exe", "WindowGridRust64.dll", "WindowGridRust32.dll", "WindowGridRustARM64.dll", "WindowGridRust.settings"] {
         assert!(work.join(f).exists(), "{f} should exist in the work directory");
     }
 
@@ -139,7 +139,7 @@ fn starts_publishes_restarts_and_cleans_up() {
     // 3. Both hook hosts started (they log when they start) and the overlay is a child.
     wait_for("the hook hosts to log their start", 10, || {
         let log = log_of(&work);
-        (log.contains("[X64]") && log.contains("[X86]") && log.contains("Starting WindowGrid hook")).then_some(())
+        (log.contains("[X64]") && log.contains("[X86]") && log.contains("Starting WindowGridRust hook")).then_some(())
     });
     let kids = children_of(app_pid);
     assert!(kids.len() >= 3, "overlay and two hook hosts should be children, got {kids:?}");
@@ -168,7 +168,7 @@ fn quits_cleanly_and_stops_its_helpers() {
         return;
     }
     let work = temp_dir("quit");
-    let exe = work.join("WindowGrid.exe");
+    let exe = work.join("WindowGridRust.exe");
     std::fs::copy(APP, &exe).unwrap();
     let hook = Section::open_or_create(names::MAP_HOOK, SettingsMemory::SIZE).unwrap();
     hook.write_bytes(0, &0i32.to_le_bytes());
@@ -193,8 +193,8 @@ fn silent_install_copies_configures_and_starts_the_installed_copy() {
         return;
     }
     let work = temp_dir("install-src");
-    let target = temp_dir("install-dst").join("WindowGrid");
-    let exe = work.join("WindowGrid.exe");
+    let target = temp_dir("install-dst").join("WindowGridRust");
+    let exe = work.join("WindowGridRust.exe");
     std::fs::copy(APP, &exe).unwrap();
     let hook = Section::open_or_create(names::MAP_HOOK, SettingsMemory::SIZE).unwrap();
     hook.write_bytes(0, &0i32.to_le_bytes());
@@ -204,13 +204,13 @@ fn silent_install_copies_configures_and_starts_the_installed_copy() {
     let status = wait_for("the installer to finish", 30, || installer.0.try_wait().unwrap());
     assert!(status.success(), "{status:?}\n{}", log_of(&work));
 
-    let installed = target.join("WindowGrid.exe");
+    let installed = target.join("WindowGridRust.exe");
     assert!(installed.exists(), "the executable was copied");
-    assert!(target.join("WindowGrid.settings").exists(), "settings were written to the install directory");
+    assert!(target.join("WindowGridRust.settings").exists(), "settings were written to the install directory");
 
     // The installed copy was started and runs from the install directory.
     wait_for("the installed copy to start the overlay", 25, || (overlay_hwnd(&hook) != 0).then_some(()));
-    assert!(target.join("WindowGridOverlay.exe").exists(), "components were extracted into the install directory");
+    assert!(target.join("WindowGridRustOverlay.exe").exists(), "components were extracted into the install directory");
     let overlay_pid = window_pid(overlay_hwnd(&hook));
     // Stop it: kill the installed app (found as the overlay's parent) and clean up.
     let parent = Command::new("powershell")
@@ -246,7 +246,7 @@ unsafe extern "system" fn collect(hwnd: HWND, lparam: windows::Win32::Foundation
     let n = GetWindowTextW(hwnd, &mut title) as usize;
     let mut r = RECT::default();
     let _ = GetWindowRect(hwnd, &mut r);
-    if String::from_utf16_lossy(&title[..n]) == "WindowGrid" && r.right - r.left > 300 {
+    if String::from_utf16_lossy(&title[..n]) == "WindowGridRust" && r.right - r.left > 300 {
         out.1.push(Found { hwnd, width: r.right - r.left, height: r.bottom - r.top });
     }
     true.into()
@@ -300,7 +300,7 @@ fn the_settings_window_opens_on_the_real_desktop() {
         return;
     }
     let work = temp_dir("window");
-    let exe = work.join("WindowGrid.exe");
+    let exe = work.join("WindowGridRust.exe");
     std::fs::copy(APP, &exe).unwrap();
     let mut cmd = Command::new(&exe);
     cmd.current_dir(&work).env("WG_TEST_NO_PROMPT", "1").env("WG_TEST_OPEN_SETTINGS", "1").env("WG_TEST_QUIT_AFTER_MS", "9000");

@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "WindowGrid overlay: GPU-composited grid, selection and HUD, and the final window snap"
+description = "WindowGridRust overlay: GPU-composited grid, selection and HUD, and the final window snap"
 
 [dependencies]
 wg-core = { path = "../wg-core" }

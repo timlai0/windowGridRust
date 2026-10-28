@@ -1,4 +1,4 @@
-//! WindowGrid app: settings UI, tray icon, installer and the supervisor of the overlay and
+//! WindowGridRust app: settings UI, tray icon, installer and the supervisor of the overlay and
 //! the hook DLLs. Pure logic (arguments, view-model, installer sequencing, configuration)
 //! is unit-tested; the rest is Windows glue.
 

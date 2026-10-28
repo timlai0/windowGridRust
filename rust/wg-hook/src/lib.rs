@@ -1,4 +1,4 @@
-//! WindowGrid hook DLL (`WindowGrid64.dll` / `WindowGrid32.dll`), see ADR 005.
+//! WindowGridRust hook DLL (`WindowGridRust64.dll` / `WindowGridRust32.dll`), see ADR 002.
 //!
 //! `grid` and `session` hold all behavior and are plain, testable Rust. The remaining
 //! modules are the Windows glue; they are `no_std`, link without the C runtime, and are

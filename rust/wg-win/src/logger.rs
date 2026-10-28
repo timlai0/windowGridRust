@@ -1,4 +1,4 @@
-//! Appends to `WindowGrid.log` next to the executable, in the format shared with the app
+//! Appends to `WindowGridRust.log` next to the executable, in the format shared with the app
 //! and the hook DLLs (see `wg_core::log`). Writers hold the named log mutex briefly.
 
 use crate::wide;
@@ -18,8 +18,8 @@ fn path() -> &'static std::path::Path {
     PATH.get_or_init(|| {
         std::env::current_exe()
             .ok()
-            .and_then(|p| p.parent().map(|d| d.join("WindowGrid.log")))
-            .unwrap_or_else(|| "WindowGrid.log".into())
+            .and_then(|p| p.parent().map(|d| d.join("WindowGridRust.log")))
+            .unwrap_or_else(|| "WindowGridRust.log".into())
     })
 }
 
@@ -27,7 +27,7 @@ fn exe_name() -> String {
     std::env::current_exe()
         .ok()
         .and_then(|p| p.file_name().map(|n| n.to_string_lossy().into_owned()))
-        .unwrap_or_else(|| "WindowGrid.exe".to_string())
+        .unwrap_or_else(|| "WindowGridRust.exe".to_string())
 }
 
 pub fn log(msg: &str) {
@@ -61,7 +61,7 @@ pub fn log(msg: &str) {
     }
 }
 
-/// Writes the separator and a start line, like the other WindowGrid processes.
+/// Writes the separator and a start line, like the other WindowGridRust processes.
 pub fn start(version: &str) {
     for line in wg_core::log::session_separator() {
         if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(path()) {

@@ -344,7 +344,7 @@ component ConfirmDialog inherits Rectangle {
 }
 
 export component SettingsWindow inherits Window {
-    title: "WindowGrid";
+    title: "WindowGridRust";
     icon: @image-url("../assets/icon.png");
     preferred-width: 960px;
     preferred-height: 680px;
@@ -443,7 +443,7 @@ export component SettingsWindow inherits Window {
                     padding-bottom: 18px;
                     Image { source: @image-url("../assets/icon.png"); width: 30px; height: 30px; }
                     Text {
-                        text: "WindowGrid";
+                        text: "WindowGridRust";
                         font-size: 18px;
                         font-weight: 700;
                         vertical-alignment: center;
@@ -621,7 +621,7 @@ export component SettingsWindow inherits Window {
             // ---- Behavior --------------------------------------------------------------
             if root.page == 2: Page {
                 title: "Behavior";
-                subtitle: "How windows are placed, and the Windows options WindowGrid depends on.";
+                subtitle: "How windows are placed, and the Windows options WindowGridRust depends on.";
                 Card {
                     title: "Snapping";
                     SettingRow {
@@ -725,7 +725,7 @@ export component SettingsWindow inherits Window {
             // ---- Info & Usage ----------------------------------------------------------
             if root.page == 5: Page {
                 title: "Info & Usage";
-                subtitle: "How to use WindowGrid, and where its files live.";
+                subtitle: "How to use WindowGridRust, and where its files live.";
                 HorizontalLayout {
                     spacing: 16px;
                     Card {
@@ -763,7 +763,7 @@ export component SettingsWindow inherits Window {
                     }
                     Card {
                         horizontal-stretch: 1;
-                        title: "About WindowGrid";
+                        title: "About WindowGridRust";
                         HorizontalLayout {
                             spacing: 12px;
                             Text { text: "Version"; color: Palette.foreground; opacity: 0.7; width: 70px; }
@@ -777,9 +777,9 @@ export component SettingsWindow inherits Window {
             // ---- Under the hood --------------------------------------------------------
             if root.page == 6: Page {
                 title: "Under the hood";
-                subtitle: "WindowGrid was rewritten in Rust. What changed, and how the pieces work together.";
+                subtitle: "WindowGridRust reimplements the original WindowGrid in Rust. What changed, and how the pieces work together.";
                 Card {
-                    title: "C# before, Rust now";
+                    title: "Original C# WindowGrid vs. WindowGridRust";
                     GridLayout {
                         spacing-horizontal: 16px;
                         spacing-vertical: 5px;
@@ -847,7 +847,7 @@ export component SettingsWindow inherits Window {
                     }
                 }
                 Text {
-                    text: "Built for x64, x86 and ARM64. Only the x64 hook is drag-tested; the ARM64 one builds but has never run on real hardware. Settings keep the original WindowGrid.settings format. Details: docs/adr 003\u{2013}008.";
+                    text: "Built for x64, x86 and ARM64. Only the x64 hook is drag-tested; the ARM64 one builds but has never run on real hardware. Settings use the same format as the original WindowGrid.settings. Details: docs/adr 000\u{2013}005.";
                     color: Palette.foreground;
                     opacity: 0.55;
                     font-size: 12px;
@@ -878,11 +878,11 @@ export component SettingsWindow inherits Window {
     if root.confirm != 0: ConfirmDialog {
         width: root.width;
         height: root.height;
-        heading: root.confirm == 1 ? "Exit WindowGrid?" : "Reset all settings?";
+        heading: root.confirm == 1 ? "Exit WindowGridRust?" : "Reset all settings?";
         message: root.confirm == 1
-            ? "WindowGrid will close completely. Windows will no longer snap to the grid until you start it again."
+            ? "WindowGridRust will close completely. Windows will no longer snap to the grid until you start it again."
             : "Every setting goes back to its default value, including your shortcuts. This cannot be undone.";
-        confirm-text: root.confirm == 1 ? "Exit WindowGrid" : "Reset settings";
+        confirm-text: root.confirm == 1 ? "Exit WindowGridRust" : "Reset settings";
         confirmed => {
             if (root.confirm == 1) { root.exit-app(); } else { root.reset(); }
             root.confirm = 0;
@@ -896,7 +896,7 @@ export component SettingsWindow inherits Window {
 // ---------------------------------------------------------------------------------------
 
 export component InstallWindow inherits Window {
-    title: "WindowGrid Setup";
+    title: "WindowGridRust Setup";
     icon: @image-url("../assets/icon.png");
     preferred-width: 520px;
     preferred-height: 400px;
@@ -923,7 +923,7 @@ export component InstallWindow inherits Window {
     VerticalLayout {
         padding: 20px;
         spacing: 14px;
-        Text { text: "Set up WindowGrid " + root.version; font-size: 20px; font-weight: 700; color: Palette.foreground; }
+        Text { text: "Set up WindowGridRust " + root.version; font-size: 20px; font-weight: 700; color: Palette.foreground; }
 
         HorizontalLayout {
             spacing: 8px;
@@ -954,7 +954,7 @@ export component InstallWindow inherits Window {
         VerticalLayout {
             spacing: 4px;
             Switch { text: "Create a Start Menu shortcut"; enabled: !root.portable; checked <=> root.shortcut; }
-            Switch { text: "Start WindowGrid when I sign in"; enabled: !root.portable; checked <=> root.autostart; }
+            Switch { text: "Start WindowGridRust when I sign in"; enabled: !root.portable; checked <=> root.autostart; }
             Switch { text: "Show a splash screen at start"; checked <=> root.splash-screen; }
         }
 

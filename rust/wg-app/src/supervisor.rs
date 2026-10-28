@@ -276,26 +276,26 @@ mod tests {
     fn x64_machine_runs_a_32_and_a_64_bit_host_plus_the_overlay() {
         let s = specs(Path::new(r"D:\wg"), Machine::X64);
         assert_eq!(s.len(), 3);
-        assert_eq!(s[0].exe, PathBuf::from(r"D:\wg\WindowGridOverlay.exe"));
+        assert_eq!(s[0].exe, PathBuf::from(r"D:\wg\WindowGridRustOverlay.exe"));
         assert!(s[1].exe.to_string_lossy().to_lowercase().contains("syswow64"));
-        assert_eq!(s[1].raw_args, r#""D:\wg\WindowGrid32.dll", RunDll"#);
+        assert_eq!(s[1].raw_args, r#""D:\wg\WindowGridRust32.dll", RunDll"#);
         assert!(s[2].exe.to_string_lossy().to_lowercase().contains("system32"));
-        assert_eq!(s[2].raw_args, r#""D:\wg\WindowGrid64.dll", RunDll"#);
+        assert_eq!(s[2].raw_args, r#""D:\wg\WindowGridRust64.dll", RunDll"#);
     }
 
     #[test]
     fn arm64_machine_gets_the_native_host() {
         let s = specs(Path::new(r"D:\wg"), Machine::Arm64);
         assert_eq!(s.len(), 3);
-        assert!(s.iter().any(|x| x.raw_args.contains("WindowGridARM64.dll")));
-        assert!(!s.iter().any(|x| x.raw_args.contains("WindowGrid64.dll")), "x64 host is not started on ARM64");
+        assert!(s.iter().any(|x| x.raw_args.contains("WindowGridRustARM64.dll")));
+        assert!(!s.iter().any(|x| x.raw_args.contains("WindowGridRust64.dll")), "x64 host is not started on ARM64");
     }
 
     #[test]
     fn a_32_bit_os_only_needs_the_32_bit_host() {
         let s = specs(Path::new(r"D:\wg"), Machine::X86);
         assert_eq!(s.len(), 2);
-        assert!(s[1].raw_args.contains("WindowGrid32.dll"));
+        assert!(s[1].raw_args.contains("WindowGridRust32.dll"));
     }
 
     #[test]

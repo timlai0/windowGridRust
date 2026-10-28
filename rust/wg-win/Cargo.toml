@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "Windows helpers shared by the WindowGrid overlay and app: shared memory, logging, single instance"
+description = "Windows helpers shared by the WindowGridRust overlay and app: shared memory, logging, single instance"
 
 [dependencies]
 wg-core = { path = "../wg-core" }

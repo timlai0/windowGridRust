@@ -1,4 +1,4 @@
-//! Formatting for `WindowGrid.log`, which the app, overlay and hook DLLs all append to.
+//! Formatting for `WindowGridRust.log`, which the app, overlay and hook DLLs all append to.
 //!
 //! A line looks like
 //! `16:36:38.176 [APP] (90016:48856) WindowGrid.exe      : Starting WindowGrid.exe (1.4.0.0)`.

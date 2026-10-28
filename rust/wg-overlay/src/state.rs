@@ -53,7 +53,7 @@ impl Machine {
         self.last
     }
 
-    /// `WindowGridShowGrid`: a mode switch, or `Idle` when the drag has ended.
+    /// `WindowGridRustShowGrid`: a mode switch, or `Idle` when the drag has ended.
     pub fn on_show_grid(&mut self, mode: Mode, center: Point, esc_down: bool) -> Vec<Effect> {
         if mode == Mode::Idle {
             let previous = self.mode;
@@ -65,7 +65,7 @@ impl Machine {
         vec![Effect::StartTimer, Effect::Begin { mode, center }]
     }
 
-    /// `WindowGridArea`: the selection corners in cells. Ignored while idle or unchanged.
+    /// `WindowGridRustArea`: the selection corners in cells. Ignored while idle or unchanged.
     pub fn on_area(&mut self, cells: Cells) -> Option<Effect> {
         if self.mode == Mode::Idle || self.last == Some(cells) {
             return None;

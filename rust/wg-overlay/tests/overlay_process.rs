@@ -3,7 +3,7 @@
 //!
 //! It starts the overlay with test-only names, a small test rectangle in the top-left corner
 //! of the screen, and a window of its own as the snap target. It never touches any other
-//! window, and a running WindowGrid is unaffected (separate names). The overlay is visible
+//! window, and a running WindowGridRust is unaffected (separate names). The overlay is visible
 //! for about two seconds. A screenshot of the overlay area is written to `target/tmp/`.
 
 #![cfg(all(windows, feature = "isolated"))]
@@ -77,7 +77,7 @@ fn create_target() -> HWND {
         let hwnd = CreateWindowExW(
             WS_EX_TOOLWINDOW,
             PCWSTR(class.as_ptr()),
-            PCWSTR(wide("WindowGrid test target").as_ptr()),
+            PCWSTR(wide("WindowGridRust test target").as_ptr()),
             WS_OVERLAPPEDWINDOW,
             1100,
             700,

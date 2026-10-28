@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use wg_core::ipc::{GridWindowMemory, InputMemory, SettingsMemory, INPUT_MAP_SIZE};
 use wg_core::settings::Settings;
 
-pub const SETTINGS_FILE: &str = "WindowGrid.settings";
+pub const SETTINGS_FILE: &str = "WindowGridRust.settings";
 
 /// How the settings were obtained at startup.
 #[derive(Debug, PartialEq, Eq)]
@@ -104,7 +104,7 @@ mod tests {
         c.save().unwrap();
         let text = std::fs::read_to_string(Config::path_in(&d)).unwrap();
         assert!(text.starts_with("{\r\n    \"App\":\r\n"), "legacy layout");
-        assert!(!d.join("WindowGrid.settings.tmp").exists(), "temporary file is gone");
+        assert!(!d.join("WindowGridRust.settings.tmp").exists(), "temporary file is gone");
         let (again, state) = Config::load(&d);
         assert_eq!(state, LoadState::Loaded);
         assert_eq!(again.settings.grid.grid_x, 20);

@@ -1,4 +1,4 @@
-//! `WindowGrid.exe`.
+//! `WindowGridRust.exe`.
 #![windows_subsystem = "windows"]
 
 fn main() {

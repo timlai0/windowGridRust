@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "WindowGrid in-context hook DLL (WindowGrid64.dll / WindowGrid32.dll)"
+description = "WindowGridRust in-context hook DLL (WindowGridRust64.dll / WindowGridRust32.dll)"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

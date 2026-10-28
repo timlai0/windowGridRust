@@ -1,4 +1,4 @@
-# ADR 005: Behavior Specification for the Rust Hook (`wg-hook`)
+# ADR 002: Behavior Specification for the Rust Hook (`wg-hook`)
 
 **Date:** 2026-10-14  
 **Amended:** 2026-10-20  
@@ -6,21 +6,16 @@
 
 ## Context
 
-Prior to `v2.0.0`, `WindowGrid32.dll` and `WindowGrid64.dll` were shipped as precompiled 2016 MSVC binaries plus hand-patched code regions (ADR 003/004). To replace them with maintainable Rust source (`rust/wg-hook`), their observable behavior was recorded in this specification by analysing the binaries' imports, strings, and machine code and by calling their pure helper functions; the Rust implementation is written from this specification rather than translated from disassembly.
-
-Corrections to earlier documentation:
-
-- The DLLs do **not** use `WH_MOUSE_LL` / `WH_KEYBOARD_LL`. They use an in-context `SetWinEventHook` plus per-drag `WH_KEYBOARD` / `WH_MOUSE` hooks and a subclassed window procedure.
-- The overlay's HUD data comes from `WindowGridArea` messages, not from a polled hook state.
+The original WindowGrid ships its hooks, `WindowGrid32.dll` and `WindowGrid64.dll`, as precompiled 2016 MSVC binaries without source. To reimplement them as maintainable Rust source (`rust/wg-hook`), their observable behavior was recorded in this specification by analysing the binaries' imports, strings, and machine code and by calling their pure helper functions; the Rust implementation is written from this specification rather than translated from disassembly. Names below are WindowGridRust's own (see the deviations at the end).
 
 ## Process model
 
-- The app starts `rundll32.exe <dll>,RunDll` once per bitness: `System32\rundll32.exe` + `WindowGrid64.dll`, and `SysWOW64\rundll32.exe` + `WindowGrid32.dll`.
+- The app starts `rundll32.exe <dll>,RunDll` once per bitness: `System32\rundll32.exe` + `WindowGridRust64.dll`, and `SysWOW64\rundll32.exe` + `WindowGridRust32.dll`.
 - `RunDll(HWND, HINSTANCE, LPSTR, int)`:
-  1. Creates a mutex (`Global\{58B6584C-820B-4813-97D1-6C923AD1CB42}` for 64-bit, `Global\{C26E1FC8-F719-4044-9122-029960C6C933}` for 32-bit) and returns at once if it already exists (`ERROR_ALREADY_EXISTS`).
-  2. Registers the messages `WindowGridShowGrid`, `WindowGridArea`, `WindowGridTarget`, and `WindowGridStop`, and calls `ChangeWindowMessageFilterEx(hwnd, WindowGridStop, MSGFLT_ALLOW)` on the rundll32 window.
+  1. Creates a mutex (`Global\{D82B85E1-BAA7-419F-AD0E-C1540EF8BFAB}` for 64-bit, `Global\{FD439CB8-8CFC-4209-BB19-DF8AA54B6E56}` for 32-bit) and returns at once if it already exists (`ERROR_ALREADY_EXISTS`).
+  2. Registers the messages `WindowGridRustShowGrid`, `WindowGridRustArea`, `WindowGridRustTarget`, and `WindowGridRustStop`, and calls `ChangeWindowMessageFilterEx(hwnd, WindowGridRustStop, MSGFLT_ALLOW)` on the rundll32 window.
   3. Installs `SetWinEventHook(EVENT_SYSTEM_MOVESIZESTART 0x0A, EVENT_SYSTEM_MOVESIZEEND 0x0B, hDll, callback, 0, 0, WINEVENT_INCONTEXT | WINEVENT_SKIPOWNPROCESS = 6)`.
-  4. Runs a `GetMessage` loop and exits when a message equal to `WindowGridStop` arrives (the app broadcasts it with `PostMessage(HWND_BROADCAST, ...)`), then `UnhookWinEvent`.
+  4. Runs a `GetMessage` loop and exits when a message equal to `WindowGridRustStop` arrives (the app broadcasts it with `PostMessage(HWND_BROADCAST, ...)`), then `UnhookWinEvent`.
 - Because the event hook is in-context, Windows loads the DLL into every process that owns a window being moved or sized; the callback then runs inside that process, on that thread. Both bitnesses are required.
 
 ## WinEvent callback (runs in the dragged window's process)
@@ -38,7 +33,7 @@ Corrections to earlier documentation:
 5. Install `WH_MOUSE` and `WH_KEYBOARD` hooks (the original passed thread id 0, i.e. global hooks; the Rust version passes the current thread id, since the modal drag loop pumps messages on that thread and nothing else needs them).
 
 ### End session
-Triggered by `MOVESIZEEND`, `WM_NCDESTROY`, or failure to subclass. Unhook both input hooks. If `hwnd` is the subclassed window: `PostMessage(overlay, WindowGridShowGrid, 0, 0)` (mode 0 = drag ended), `moving_msg = -1`, restore the original window procedure.
+Triggered by `MOVESIZEEND`, `WM_NCDESTROY`, or failure to subclass. Unhook both input hooks. If `hwnd` is the subclassed window: `PostMessage(overlay, WindowGridRustShowGrid, 0, 0)` (mode 0 = drag ended), `moving_msg = -1`, restore the original window procedure.
 
 ## Input hooks
 
@@ -92,18 +87,18 @@ Messages are intercepted only while `hwnd == subclassed window` and `!cancelled`
 
 **Messages** (all `PostMessage` to the overlay window, `HWND` read from `Hook.GridWindow`, sign-extended):
 
-- Once per drag session, immediately before the first `WindowGridShowGrid`: `WindowGridTarget`, `wParam = hwnd as u32`, `lParam = 0` ([ADR 008](008-snap-target-and-placement-verification.md)).
-- If the mode (`move_mode`) differs from `prev_mode` (initially -1), or `monitor_changed`: `WindowGridShowGrid`, `wParam = 1` (Resize) or `2` (Move), `lParam = pack(monitor work-area centre)`.
-- If the start/current cell pairs differ from the previously posted ones (or the mode just changed): `WindowGridArea`. Move mode: `wParam = pack(left, top)`, `lParam = pack(right, bottom)` of `cells`. Resize mode: `wParam = pack(start)`, `lParam = pack(cur)`.
+- Once per drag session, immediately before the first `WindowGridRustShowGrid`: `WindowGridRustTarget`, `wParam = hwnd as u32`, `lParam = 0` ([ADR 005](005-snap-target-and-placement-verification.md)).
+- If the mode (`move_mode`) differs from `prev_mode` (initially -1), or `monitor_changed`: `WindowGridRustShowGrid`, `wParam = 1` (Resize) or `2` (Move), `lParam = pack(monitor work-area centre)`.
+- If the start/current cell pairs differ from the previously posted ones (or the mode just changed): `WindowGridRustArea`. Move mode: `wParam = pack(left, top)`, `lParam = pack(right, bottom)` of `cells`. Resize mode: `wParam = pack(start)`, `lParam = pack(cur)`.
 - `pack(x, y) = (y << 16) | (x & 0xFFFF)` as 16-bit values.
 
 ## Rust-side deviations from the original binaries (intentional)
 
 - `WH_KEYBOARD`/`WH_MOUSE` hooks are thread-scoped instead of global.
 - No dependence on the C runtime (the DLLs are `no_std`, linked with `rust-lld`, imports via `raw-dylib`).
-- Posts `WindowGridTarget` once per drag ahead of `WindowGridShowGrid` so the overlay targets the exact dragged `HWND` ([ADR 008](008-snap-target-and-placement-verification.md)).
+- Posts `WindowGridRustTarget` once per drag ahead of `WindowGridRustShowGrid` so the overlay targets the exact dragged `HWND` ([ADR 005](005-snap-target-and-placement-verification.md)).
 - `WM_NCDESTROY` is forwarded to the original window procedure (the legacy binary dropped it after restoring the procedure), and the session is torn down on `WM_NCDESTROY` even after Esc cancelled the grid.
-- Shares the same shared-memory layouts and message names as `wg-core::ipc`.
+- Uses its own DLL, mutex, window-message, and shared-memory names (`WindowGridRust*` and new GUIDs), so it never interacts with an original WindowGrid installation. The shared-memory layouts still match the original binaries byte for byte and are defined once in `wg-core::ipc`.
 
 ## Implementation status
 

@@ -285,7 +285,7 @@ impl InstallPorts for RealPorts {
         let Some(dir) = dir else { return false };
         let link = dir.join(format!("{}.lnk", installer::PRODUCT));
         log(&format!("Adding start menu shortcut: \"{}\"", target.display()));
-        match create_shortcut(target, &link, "WindowGrid Window Management Tool") {
+        match create_shortcut(target, &link, "WindowGridRust Window Management Tool") {
             Ok(()) => true,
             Err(e) => {
                 log(&format!("Unable to create shortcut \"{}\": {e}", link.display()));
@@ -317,9 +317,9 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         let target = std::env::current_exe().unwrap();
         // Missing extension is added; missing directory is created.
-        let link = dir.join("sub").join("WindowGrid Test");
+        let link = dir.join("sub").join("WindowGridRust Test");
         create_shortcut(&target, &link, "A test shortcut").unwrap();
-        let file = dir.join("sub").join("WindowGrid Test.lnk");
+        let file = dir.join("sub").join("WindowGridRust Test.lnk");
         assert!(file.exists());
         let resolved = shortcut_target(&file).unwrap();
         assert!(same_path(&resolved, &target), "{resolved:?} vs {target:?}");
@@ -343,7 +343,7 @@ mod tests {
 
     #[test]
     fn registry_round_trip_in_a_unique_scratch_key() {
-        let key = format!(r"Software\WindowGridTest-{}-winops", std::process::id());
+        let key = format!(r"Software\WindowGridRustTest-{}-winops", std::process::id());
         assert!(reg_set_string(&key, "s", "v"));
         assert!(reg_set_dword(&key, "d", 7));
         assert_eq!(reg_get_string(&key, "s").as_deref(), Some("v"));

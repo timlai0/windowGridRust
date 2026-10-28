@@ -3,26 +3,26 @@
 //! Everything here is `repr(C, packed)` plain data written into named, pagefile-backed
 //! shared memory sections (always at offset 0), plus three registered window messages.
 //! Bools are single bytes: that is the layout `MemoryMappedViewAccessor.Write<T>` produced
-//! in the C# app, so a Rust overlay or hook can already talk to the legacy host and
-//! vice versa. (`GridWindowMemory` is only exchanged between app and overlay, so if both
-//! are Rust the layout can change freely, but it must change on both sides together.)
+//! in the original C# WindowGrid, which these structs still match byte for byte; only the
+//! section and message names differ. (`GridWindowMemory` is only exchanged between app and
+//! overlay, so its layout can change freely, but it must change on both sides together.)
 
 use core::mem::size_of;
 
 #[cfg(feature = "std")]
 use crate::settings::{GridSettings, InputSettings, Settings};
 
-pub const MAP_HOOK: &str = "WindowGridMapping_Hook";
-pub const MAP_INPUT: &str = "WindowGridMapping_Input";
-pub const MAP_GRID_WINDOW: &str = "WindowGridMapping_GridWindow";
-pub const MAP_GRID_WINDOW_HANDLE: &str = "WindowGridMapping_GridWindowHandle";
+pub const MAP_HOOK: &str = "WindowGridRustMapping_Hook";
+pub const MAP_INPUT: &str = "WindowGridRustMapping_Input";
+pub const MAP_GRID_WINDOW: &str = "WindowGridRustMapping_GridWindow";
+pub const MAP_GRID_WINDOW_HANDLE: &str = "WindowGridRustMapping_GridWindowHandle";
 
-pub const MSG_SHOW_GRID: &str = "WindowGridShowGrid";
-pub const MSG_AREA: &str = "WindowGridArea";
-pub const MSG_TARGET: &str = "WindowGridTarget";
-pub const MSG_STOP: &str = "WindowGridStop";
+pub const MSG_SHOW_GRID: &str = "WindowGridRustShowGrid";
+pub const MSG_AREA: &str = "WindowGridRustArea";
+pub const MSG_TARGET: &str = "WindowGridRustTarget";
+pub const MSG_STOP: &str = "WindowGridRustStop";
 
-pub const LOG_MUTEX: &str = "Global\\WindowGridLog";
+pub const LOG_MUTEX: &str = "Global\\WindowGridRustLog";
 
 /// Bit 16 of `SettingsMemory::grid_x`: tells the hook to defer window resizing until the
 /// drag ends. The hook masks it out before doing cell maths; the overlay never sees it.
@@ -71,7 +71,7 @@ pub unsafe trait Wire: Copy + Sized {
 // The window-handle and instance-PID sections hold one 32-bit integer each.
 unsafe impl Wire for i32 {}
 
-/// `WindowGridMapping_Hook` (16 bytes). Written by the app, read by the hooks; the overlay
+/// `WindowGridRustMapping_Hook` (16 bytes). Written by the app, read by the hooks; the overlay
 /// stores its window handle in `grid_window` so the hooks know where to post messages.
 #[repr(C, packed)]
 #[derive(Clone, Copy, Default)]
@@ -108,7 +108,7 @@ impl SettingsMemory {
     }
 }
 
-/// One entry of `WindowGridMapping_Input` (8 bytes each).
+/// One entry of `WindowGridRustMapping_Input` (8 bytes each).
 #[repr(C, packed)]
 #[derive(Clone, Copy, Default)]
 pub struct InputMemory {
@@ -160,7 +160,7 @@ impl InputMemory {
     }
 }
 
-/// `WindowGridMapping_GridWindow` (44 bytes). Written by the app, read by the overlay.
+/// `WindowGridRustMapping_GridWindow` (44 bytes). Written by the app, read by the overlay.
 /// Colours are packed `0xAARRGGBB`; `bool`s are one byte, 0 or 1.
 #[repr(C, packed)]
 #[derive(Clone, Copy, Default)]

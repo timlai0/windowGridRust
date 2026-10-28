@@ -1,4 +1,4 @@
-//! `WindowGridOverlay.exe`: draws the grid while a window is dragged and snaps it afterwards.
+//! `WindowGridRustOverlay.exe`: draws the grid while a window is dragged and snaps it afterwards.
 #![windows_subsystem = "windows"]
 
 fn main() {

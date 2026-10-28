@@ -1,7 +1,7 @@
-//! Key and mouse-button codes, matching `WindowGrid/KeyCode.cs`.
+//! Key and mouse-button codes, matching the `KeyCode` enum of the original C# WindowGrid.
 //!
 //! Keyboard values are DirectInput-style scan codes (bit 7 set for extended keys);
-//! mouse buttons use 257-261. The names are what `WindowGrid.settings` stores.
+//! mouse buttons use 257-261. The names are what `WindowGridRust.settings` stores.
 
 /// Name/value table, in the same order as the C# enum.
 pub const KEY_TABLE: &[(&str, i32)] = &[

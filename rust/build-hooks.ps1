@@ -3,10 +3,10 @@
   Builds the Rust hook DLLs for x64, x86 and ARM64 and copies them to rust\dist.
 
 .DESCRIPTION
-  Produces dist\WindowGrid64.dll and dist\WindowGrid32.dll (the names the app expects)
-  and dist\WindowGridARM64.dll (new). With -Isolated the DLLs use test-only mutex,
+  Produces dist\WindowGridRust64.dll and dist\WindowGridRust32.dll (the names the app expects)
+  and dist\WindowGridRustARM64.dll. With -Isolated the DLLs use test-only mutex,
   window-message and shared-memory names (see rust\README.md) so they can never interfere
-  with a running WindowGrid; those go to dist-iso\.
+  with a running WindowGridRust; those go to dist-iso\.
 
   Needs only the Rust toolchain with the three MSVC targets (rustup target add
   x86_64-pc-windows-msvc i686-pc-windows-msvc aarch64-pc-windows-msvc). No Visual Studio
@@ -29,9 +29,9 @@ if ($Isolated) {
 New-Item -ItemType Directory -Force $outDir | Out-Null
 
 $builds = @(
-    @{ Target = 'x86_64-pc-windows-msvc'; Name = 'WindowGrid64.dll' },
-    @{ Target = 'i686-pc-windows-msvc';   Name = 'WindowGrid32.dll' },
-    @{ Target = 'aarch64-pc-windows-msvc'; Name = 'WindowGridARM64.dll' }
+    @{ Target = 'x86_64-pc-windows-msvc'; Name = 'WindowGridRust64.dll' },
+    @{ Target = 'i686-pc-windows-msvc';   Name = 'WindowGridRust32.dll' },
+    @{ Target = 'aarch64-pc-windows-msvc'; Name = 'WindowGridRustARM64.dll' }
 )
 
 foreach ($b in $builds) {

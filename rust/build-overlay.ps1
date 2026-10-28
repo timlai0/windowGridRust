@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Builds the Rust overlay (release) and copies it to rust\dist as WindowGridOverlay.exe.
+  Builds the Rust overlay (release) and copies it to rust\dist as WindowGridRustOverlay.exe.
 
 .DESCRIPTION
   The overlay uses the standard library, so unlike the hook DLLs it needs a working linker
@@ -10,7 +10,7 @@
 
   With -Isolated the executable uses test-only mutex, window-message and shared-memory
   names (see rust\README.md) and is written to dist-iso\, so it can never replace or disturb
-  a running WindowGrid overlay.
+  a running WindowGridRust overlay.
 #>
 param(
     [switch]$Isolated,
@@ -37,5 +37,5 @@ if ($Isolated) {
 New-Item -ItemType Directory -Force $outDir | Out-Null
 cargo build -p wg-overlay --release --target-dir $targetDir @features
 if ($LASTEXITCODE -ne 0) { throw 'build failed' }
-Copy-Item "$targetDir\release\wg-overlay.exe" "$outDir\WindowGridOverlay.exe" -Force
-'{0,-24} {1,8:N0} bytes' -f 'WindowGridOverlay.exe', (Get-Item "$outDir\WindowGridOverlay.exe").Length
+Copy-Item "$targetDir\release\wg-overlay.exe" "$outDir\WindowGridRustOverlay.exe" -Force
+'{0,-24} {1,8:N0} bytes' -f 'WindowGridRustOverlay.exe', (Get-Item "$outDir\WindowGridRustOverlay.exe").Length

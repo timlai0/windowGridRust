@@ -1,4 +1,4 @@
-# ADR 004: Defer Window Resize Until Drag Release
+# ADR 001: Defer Window Resize Until Drag Release
 
 **Date:** 2026-10-09  
 **Amended:** 2026-10-20  
@@ -6,20 +6,20 @@
 
 ## Context
 
-When resizing windows using WindowGrid, the native hook procedures (`WindowGrid64.dll`, `WindowGrid32.dll`, `WindowGridARM64.dll`) intercept `WM_WINDOWPOSCHANGING` and continuously overwrite `WINDOWPOS.cx` and `WINDOWPOS.cy` while clearing `SWP_NOSIZE`. During mouse drag operations over grid cells, this causes the target window to continuously resize in real time.
+When resizing windows using WindowGridRust, the native hook procedures (`WindowGridRust64.dll`, `WindowGridRust32.dll`, `WindowGridRustARM64.dll`) intercept `WM_WINDOWPOSCHANGING` and continuously overwrite `WINDOWPOS.cx` and `WINDOWPOS.cy` while clearing `SWP_NOSIZE`. During mouse drag operations over grid cells, this causes the target window to continuously resize in real time.
 
 For complex and GPU-accelerated applications (such as Chromium-based browsers, Electron apps, VS Code, and Discord), continuous intermediate sizing triggers severe layout reflowing, DOM relayout, and GPU swapchain recreation, resulting in visual thrashing, stuttering, and dropped frames.
 
 ## Decisions
 
 1. **Configurable Deferral Setting:** Added `DeferResizeUntilRelease` (default `true`) in `GridSettings`, `GridWindowMemory`, and the Settings UI.
-2. **IPC Shared Memory Signaling:** Utilized bit 16 (`0x10000`, `DEFER_FLAG`) of `grid_x` in `SettingsMemory` (`"WindowGridMapping_Hook"`) to communicate the deferral state to the hook DLLs without altering struct alignment or binary ABI. Clean `grid_x` values are copied to the overlay shared memory (`"WindowGridMapping_GridWindow"`) and masked in `wg-hook` so grid cell math remains intact.
+2. **IPC Shared Memory Signaling:** Utilized bit 16 (`0x10000`, `DEFER_FLAG`) of `grid_x` in `SettingsMemory` (`"WindowGridRustMapping_Hook"`) to communicate the deferral state to the hook DLLs without altering struct alignment or binary ABI. Clean `grid_x` values are copied to the overlay shared memory (`"WindowGridRustMapping_GridWindow"`) and masked in `wg-hook` so grid cell math remains intact.
 3. **Native Hook Live-Resize Suppression (`wg-hook`):**
-   - In `WM_MOVING` (`0x216`): When deferral is enabled, bypasses message conversion to `WM_SIZING` (`0x214`) and bypasses copying `grid_pixels` into `lParam`, preventing intermediate window size manipulation while preserving `WindowGridArea` updates for real-time overlay HUD tracking.
+   - In `WM_MOVING` (`0x216`): When deferral is enabled, bypasses message conversion to `WM_SIZING` (`0x214`) and bypasses copying `grid_pixels` into `lParam`, preventing intermediate window size manipulation while preserving `WindowGridRustArea` updates for real-time overlay HUD tracking.
    - In `WM_WINDOWPOSCHANGING` (`0x46`): When deferral is enabled, bypasses `WINDOWPOS.cx`/`cy` updates and leaves `SWP_NOSIZE` intact.
 4. **Target HWND Tracking and Final Snap Execution (`wg-overlay`):**
    - **Snap trigger is drag end, not hotkey release.** Activating grid mode with Space or Right Mouse Button is a momentary toggle (tap/click): releasing that input does **not** terminate the drag. The overlay stays visible and interactive for the entire drag.
-   - `wg-hook` announces the exact dragged `HWND` via `WindowGridTarget` before the first `WindowGridShowGrid` message, and posts `WindowGridShowGrid(0, 0)` (`Mode::Idle`) when the drag ends. `wg-overlay` then restores the window if maximized (`ShowWindowAsync(SW_RESTORE)`), executes `SetWindowPos` with DWM margin compensation and anchor alignment, and verifies placement via the post-snap `Verify` poll loop ([ADR 008](008-snap-target-and-placement-verification.md)).
+   - `wg-hook` announces the exact dragged `HWND` via `WindowGridRustTarget` before the first `WindowGridRustShowGrid` message, and posts `WindowGridRustShowGrid(0, 0)` (`Mode::Idle`) when the drag ends. `wg-overlay` then restores the window if maximized (`ShowWindowAsync(SW_RESTORE)`), executes `SetWindowPos` with DWM margin compensation and anchor alignment, and verifies placement via the post-snap `Verify` poll loop ([ADR 005](005-snap-target-and-placement-verification.md)).
    - **Safety-net fallback polling:** A 15 ms timer runs during active sessions so the overlay cannot leak if a hook message is lost. It cancels on `VK_ESCAPE`, and snaps only when the primary mouse button (resolved via `GetSystemMetrics(SM_SWAPBUTTON)`) has been released and the target thread has exited its modal move/size loop (`GetGUIThreadInfo` / `GUI_INMOVESIZE`) for **5 consecutive ticks (~75 ms debounce)**.
 
 ## Consequences

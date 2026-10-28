@@ -145,9 +145,9 @@ mod tests {
             Command::Install { dir: None, silent: false, shortcut: false, autostart: false }
         );
         assert_eq!(
-            cmd(&["/install", r"C:\Program Files\WindowGrid", "/s", "/shortcut", "/onstartup"]),
+            cmd(&["/install", r"C:\Program Files\WindowGridRust", "/s", "/shortcut", "/onstartup"]),
             Command::Install {
-                dir: Some(PathBuf::from(r"C:\Program Files\WindowGrid")),
+                dir: Some(PathBuf::from(r"C:\Program Files\WindowGridRust")),
                 silent: true,
                 shortcut: true,
                 autostart: true
@@ -173,7 +173,7 @@ mod tests {
 
     #[test]
     fn replace_takes_a_path() {
-        assert_eq!(cmd(&["/replace", r"C:\new\WindowGrid.exe"]), Command::Replace { path: PathBuf::from(r"C:\new\WindowGrid.exe") });
+        assert_eq!(cmd(&["/replace", r"C:\new\WindowGridRust.exe"]), Command::Replace { path: PathBuf::from(r"C:\new\WindowGridRust.exe") });
     }
 
     #[test]

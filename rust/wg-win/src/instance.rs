@@ -1,7 +1,7 @@
 //! "Only one of me": a named mutex plus a small section holding the owner's PID.
 //!
 //! Like the legacy apps, a newer instance *replaces* an older one: it terminates the PID
-//! recorded in the section and takes over the mutex. This is what makes starting WindowGrid
+//! recorded in the section and takes over the mutex. This is what makes starting WindowGridRust
 //! again (or the installer relaunching it) leave exactly one running copy.
 
 use crate::logger::log;

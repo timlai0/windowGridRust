@@ -18,10 +18,10 @@ pub struct Component {
     pub bytes: &'static [u8],
 }
 
-pub const OVERLAY: &str = "WindowGridOverlay.exe";
-pub const HOOK_X64: &str = "WindowGrid64.dll";
-pub const HOOK_X86: &str = "WindowGrid32.dll";
-pub const HOOK_ARM64: &str = "WindowGridARM64.dll";
+pub const OVERLAY: &str = "WindowGridRustOverlay.exe";
+pub const HOOK_X64: &str = "WindowGridRust64.dll";
+pub const HOOK_X86: &str = "WindowGridRust32.dll";
+pub const HOOK_ARM64: &str = "WindowGridRustARM64.dll";
 
 /// The components compiled into this executable (those that were available at build time).
 pub fn embedded() -> Vec<Component> {

@@ -591,7 +591,7 @@ pub fn run() -> Result<()> {
     unsafe {
         let _ = SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     }
-    let class = wide("WindowGridOverlayWindow");
+    let class = wide("WindowGridRustOverlayWindow");
     // SAFETY: standard class registration and window creation with valid arguments.
     let hwnd = unsafe {
         let hinstance = GetModuleHandleW(None)?;
@@ -606,7 +606,7 @@ pub fn run() -> Result<()> {
         let hwnd = CreateWindowExW(
             WS_EX_NOREDIRECTIONBITMAP | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
             PCWSTR(class.as_ptr()),
-            PCWSTR(wide("WindowGrid").as_ptr()),
+            PCWSTR(wide("WindowGridRust").as_ptr()),
             WS_POPUP,
             0,
             0,

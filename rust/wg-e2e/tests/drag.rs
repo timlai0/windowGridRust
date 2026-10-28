@@ -1,6 +1,6 @@
 //! Real window drags with the Rust hook DLL and the Rust overlay, both isolated builds.
 //!
-//! Run with WindowGrid CLOSED (a running one would react to the same drags), after building
+//! Run with WindowGridRust CLOSED (a running one would react to the same drags), after building
 //! the isolated artifacts:
 //!
 //! ```text
@@ -156,7 +156,7 @@ impl TestWindow {
                 let hwnd = CreateWindowExW(
                     WINDOW_EX_STYLE(0),
                     PCWSTR(class.as_ptr()),
-                    PCWSTR(wide("WindowGrid drag test").as_ptr()),
+                    PCWSTR(wide("WindowGridRust drag test").as_ptr()),
                     WS_OVERLAPPEDWINDOW,
                     x,
                     y,
@@ -282,12 +282,12 @@ fn work_area() -> RECT {
 impl Rig {
     fn start() -> Rig {
         let dist = root().join("dist-iso");
-        let dll = dist.join("WindowGrid64.dll");
-        let exe = dist.join("WindowGridOverlay.exe");
+        let dll = dist.join("WindowGridRust64.dll");
+        let exe = dist.join("WindowGridRustOverlay.exe");
         for f in [&dll, &exe] {
             assert!(f.exists(), "{} is missing: run build-hooks.ps1 -Isolated and build-overlay.ps1 -Isolated first", f.display());
         }
-        let log = dist.join("WindowGrid.log");
+        let log = dist.join("WindowGridRust.log");
         let _ = std::fs::remove_file(&log);
 
         // What the app normally publishes.
@@ -345,18 +345,18 @@ impl Rig {
     /// Starts the isolated `wg-app` in a scratch directory with a settings file saying whether
     /// resizes are deferred. The app extracts, publishes and supervises everything itself.
     fn start_app(defer: bool) -> Rig {
-        let src = root().join("dist-iso").join("WindowGrid.exe");
+        let src = root().join("dist-iso").join("WindowGridRust.exe");
         assert!(src.exists(), "{} is missing: run build-app.ps1 -Isolated first", src.display());
         let dir = std::env::temp_dir().join(format!("wg-e2e-app-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let exe = dir.join("WindowGrid.exe");
+        let exe = dir.join("WindowGridRust.exe");
         std::fs::copy(&src, &exe).unwrap();
         let mut settings = Settings::default();
         settings.grid.grid_x = COLS;
         settings.grid.grid_y = ROWS;
         settings.grid.defer_resize_until_release = defer;
-        std::fs::write(dir.join("WindowGrid.settings"), settings.to_json_string()).unwrap();
+        std::fs::write(dir.join("WindowGridRust.settings"), settings.to_json_string()).unwrap();
 
         // Only observe the sections: the app creates and fills them.
         let hook_map = Section::open_or_create(names::MAP_HOOK, SettingsMemory::SIZE).unwrap();
@@ -367,7 +367,7 @@ impl Rig {
         handle.write_bytes(0, &0i32.to_le_bytes());
 
         let app = Proc(Command::new(&exe).current_dir(&dir).env("WG_TEST_NO_PROMPT", "1").spawn().expect("start wg-app"));
-        let rig = Rig { _procs: vec![app], hook_map, _grid: grid, _input: input, handle, work: work_area(), log: dir.join("WindowGrid.log"), app_owned: true };
+        let rig = Rig { _procs: vec![app], hook_map, _grid: grid, _input: input, handle, work: work_area(), log: dir.join("WindowGridRust.log"), app_owned: true };
         let deadline = Instant::now() + Duration::from_secs(20);
         while rig.hook_map.read::<SettingsMemory>().grid_window == 0 {
             assert!(Instant::now() < deadline, "the app never started the overlay
@@ -572,7 +572,7 @@ fn live_scenario(rig: &mut Rig, failures: &mut Vec<String>) {
 }
 
 #[test]
-#[ignore = "takes over the mouse and keyboard; run with WindowGrid closed: cargo test -p wg-e2e -- --ignored --test-threads=1"]
+#[ignore = "takes over the mouse and keyboard; run with WindowGridRust closed: cargo test -p wg-e2e -- --ignored --test-threads=1"]
 fn real_drags() {
     dpi_aware();
     let mut rig = Rig::start();
@@ -587,7 +587,7 @@ fn real_drags() {
 /// The same scenarios, but `wg-app` extracts, configures and supervises the overlay and the
 /// hook hosts from its settings file (deferral on, then off in a second run of the app).
 #[test]
-#[ignore = "takes over the mouse and keyboard; run with WindowGrid closed: cargo test -p wg-e2e -- --ignored --test-threads=1"]
+#[ignore = "takes over the mouse and keyboard; run with WindowGridRust closed: cargo test -p wg-e2e -- --ignored --test-threads=1"]
 fn real_drags_supervised_by_the_app() {
     dpi_aware();
     let mut failures: Vec<String> = Vec::new();
@@ -608,7 +608,7 @@ fn real_drags_supervised_by_the_app() {
 
 /// Baseline: the harness itself can drag a window with real input (no hook, no overlay).
 #[test]
-#[ignore = "takes over the mouse and keyboard; run with WindowGrid closed: cargo test -p wg-e2e -- --ignored --test-threads=1"]
+#[ignore = "takes over the mouse and keyboard; run with WindowGridRust closed: cargo test -p wg-e2e -- --ignored --test-threads=1"]
 fn plain_drag_moves_the_window() {
     // SAFETY: process-wide DPI setup before any window exists.
     unsafe {
@@ -636,7 +636,7 @@ fn plain_drag_moves_the_window() {
 
 /// With the hook engaged, a plain drag (no activation key) must still move the window.
 #[test]
-#[ignore = "takes over the mouse and keyboard; run with WindowGrid closed: cargo test -p wg-e2e -- --ignored --test-threads=1"]
+#[ignore = "takes over the mouse and keyboard; run with WindowGridRust closed: cargo test -p wg-e2e -- --ignored --test-threads=1"]
 fn hooked_plain_drag_moves_the_window() {
     // SAFETY: process-wide DPI setup before any window exists.
     unsafe {

@@ -1,4 +1,4 @@
-//! Windows helpers shared by the WindowGrid overlay and app.
+//! Windows helpers shared by the WindowGridRust overlay and app.
 
 pub mod instance;
 pub mod logger;

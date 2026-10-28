@@ -1,4 +1,4 @@
-# ADR 008: Target Window Identification and Post-Snap Placement Verification
+# ADR 005: Target Window Identification and Post-Snap Placement Verification
 
 **Date:** 2026-10-20  
 **Status:** Accepted  
@@ -17,9 +17,9 @@ When a window drag ends and `wg-overlay` executes the final snap via `SetWindowP
 
 ## Decisions
 
-1. **Explicit Target Announcement (`WindowGridTarget`):**
-   - Registered a fourth window message, `WindowGridTarget` (`WindowGridIsoTarget` in isolated builds), in `wg-core::ipc` and `wg-core::names`.
-   - `wg-hook` posts `WindowGridTarget` (`wParam = hwnd as u32`, `lParam = 0`) to the overlay once per drag session immediately before the first `WindowGridShowGrid` message.
+1. **Explicit Target Announcement (`WindowGridRustTarget`):**
+   - Registered a fourth window message, `WindowGridRustTarget` (`WindowGridRustIsoTarget` in isolated builds), in `wg-core::ipc` and `wg-core::names`.
+   - `wg-hook` posts `WindowGridRustTarget` (`wParam = hwnd as u32`, `lParam = 0`) to the overlay once per drag session immediately before the first `WindowGridRustShowGrid` message.
    - `wg-overlay` records `hook_target` and prefers it over pointer-based `detect_target()` whenever `IsWindow(hook_target)` holds.
 
 2. **Modal Loop Guard on Safety-Net Timer (`GUI_INMOVESIZE`):**
@@ -36,4 +36,4 @@ When a window drag ends and `wg-overlay` executes the final snap via `SetWindowP
 ## Consequences
 
 - **Positive:** Eliminates missed snaps caused by Aero Snap edge conflicts, cross-monitor DPI changes, maximized state retention, touch/pen input, and pointer target misidentification.
-- **Negative:** None. Backward compatibility with older hook binaries is preserved via the pointer-detection fallback when `WindowGridTarget` is not received.
+- **Negative:** None. The overlay still falls back to pointer detection if no `WindowGridRustTarget` message arrives.

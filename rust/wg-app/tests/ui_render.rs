@@ -62,8 +62,8 @@ fn temp_config() -> Config {
 
 fn paths() -> Paths {
     Paths {
-        work_dir: PathBuf::from(r"C:\Program Files\WindowGrid"),
-        log_file: PathBuf::from(r"C:\Program Files\WindowGrid\WindowGrid.log"),
+        work_dir: PathBuf::from(r"C:\Program Files\WindowGridRust"),
+        log_file: PathBuf::from(r"C:\Program Files\WindowGridRust\WindowGridRust.log"),
         version: "2.0.0".into(),
     }
 }
@@ -126,7 +126,7 @@ fn windows_render() {
 
     // Install dialog.
     let d = ui::open_install_dialog(
-        PathBuf::from(r"C:\Program Files\WindowGrid"),
+        PathBuf::from(r"C:\Program Files\WindowGridRust"),
         PathBuf::from(r"D:\portable"),
         false,
         "2.0.0",

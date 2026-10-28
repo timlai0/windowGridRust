@@ -1,6 +1,6 @@
 //! The hook's grid maths: pointer position -> cell, selection fitting, cell -> pixel rect.
 //!
-//! Pure functions with no platform dependency, specified by ADR 005. Integer division
+//! Pure functions with no platform dependency, specified by ADR 002. Integer division
 //! truncates (like `idiv`), cell/size conversion divides first and then multiplies in
 //! `f64` (like the original), so rounding at exact cell boundaries matches.
 

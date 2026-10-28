@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "Real-drag end-to-end tests: isolated hook + isolated overlay + a test window (run with WindowGrid closed)"
+description = "Real-drag end-to-end tests: isolated hook + isolated overlay + a test window (run with WindowGridRust closed)"
 
 [dependencies]
 wg-core = { path = "../wg-core" }

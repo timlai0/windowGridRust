@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn registry_flag_on_off_in_a_scratch_key() {
-        let key = format!(r"Software\WindowGridTest-{}-flag", std::process::id());
+        let key = format!(r"Software\WindowGridRustTest-{}-flag", std::process::id());
         let flag = RegistryFlag { subkey: Box::leak(key.into_boxed_str()), name: "Toggle", on_value: 1 };
         assert!(!flag.get());
         assert!(flag.set(true));

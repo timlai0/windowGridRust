@@ -1,17 +1,19 @@
-# WindowGrid
+# WindowGridRust
 
-WindowGrid is a native Windows desktop utility written in Rust that allows users to quickly snap, resize, and align windows to a customizable grid during mouse, touch, or pen drag operations.
+WindowGridRust is a native Windows desktop utility written in Rust that allows users to quickly snap, resize, and align windows to a customizable grid during mouse, touch, or pen drag operations.
+
+WindowGridRust is an independent reimplementation of WindowGrid, the freeware window manager by Joshua Wilding (discontinued since 2016). It is not affiliated with or endorsed by its author. It uses its own executable, settings, log, and IPC names, so it neither talks to nor replaces an original WindowGrid installation; close one before running the other.
 
 ## Features
 
 - **Intuitive Snapping:** Snap windows to a customizable grid while dragging by tapping or holding configurable keyboard or mouse shortcuts.
 - **Deferred Resizing:** Optionally defer window resizing until the mouse button is released (`DeferResizeUntilRelease`, enabled by default) to avoid layout reflow and visual stuttering in complex apps.
-- **Verified Window Placement:** Tracks the exact dragged window handle (`WindowGridTarget`), restores maximized windows prior to snapping, and verifies post-snap placement to prevent displacement by Aero Snap, cross-monitor DPI changes, or application exit-move handlers.
+- **Verified Window Placement:** Tracks the exact dragged window handle (`WindowGridRustTarget`), restores maximized windows prior to snapping, and verifies post-snap placement to prevent displacement by Aero Snap, cross-monitor DPI changes, or application exit-move handlers.
 - **Window Margin Compensation:** Compensates for DWM invisible resize borders (`CompensateWindowMargins`) so the visible window frame matches grid boundaries without shrinking.
 - **Size-Preserving Moves:** Retains the window's visible dimensions when moving it across grid cells (`PreserveSizeOnMove`).
 - **Configurable Alignment Anchors:** Choose how oversized windows align relative to the selected grid cells (`TopLeft`, `Center`, `GrabPoint`).
 - **Customizable Appearance & HUD:** Configure column and row counts, color themes (`default`, `dark`, `light`, `red`, `green`, `blue`), outline or filled selection (`FillWindow`), shadow blur (`BlurRadius`), radial or linear gradient, and HUD metrics (dimensions, cell span, screen coverage, aspect ratio, mode indicator, interaction hints).
-- **Minimal Footprint:** Single ~10.5 MB executable (`WindowGrid.exe`) embedding the DirectComposition/Direct2D overlay (~447 KB, ~9 MB idle working set) and `no_std` CRT-free hook DLLs (~17–20 KB each), with ~27 MB idle working set for the host app.
+- **Minimal Footprint:** Single ~10.5 MB executable (`WindowGridRust.exe`) embedding the DirectComposition/Direct2D overlay (~447 KB, ~9 MB idle working set) and `no_std` CRT-free hook DLLs (~17–20 KB each), with ~27 MB idle working set for the host app.
 
 ## Default Input Bindings
 
@@ -28,19 +30,19 @@ Input bindings can be customized in the Settings window via the system tray icon
 
 ## Installation & CLI Usage
 
-`WindowGrid.exe` can run portably from any writable directory or install itself to the local machine:
+`WindowGridRust.exe` can run portably from any writable directory or install itself to the local machine:
 
 ```cmd
-WindowGrid.exe
-WindowGrid.exe /install [path] [/silent|/s] [/shortcut] [/onstartup]
-WindowGrid.exe /replace <path>
-WindowGrid.exe /help
+WindowGridRust.exe
+WindowGridRust.exe /install [path] [/silent|/s] [/shortcut] [/onstartup]
+WindowGridRust.exe /replace <path>
+WindowGridRust.exe /help
 ```
 
 | Flag | Description |
 |---|---|
-| *(none)* | Run directly (extracts embedded `WindowGridOverlay.exe` and hook DLLs next to itself). |
-| `/install [path]` | Install to target directory (defaults to `%ProgramFiles%\WindowGrid`). |
+| *(none)* | Run directly (extracts embedded `WindowGridRustOverlay.exe` and hook DLLs next to itself). |
+| `/install [path]` | Install to target directory (defaults to `%ProgramFiles%\WindowGridRust`). |
 | `/silent` or `/s` | Suppress installer UI dialogs. |
 | `/shortcut` | Create Start Menu shortcut. |
 | `/onstartup` | Register logon autostart (Registry `Run` value and elevated Task Scheduler entry). |
@@ -49,7 +51,7 @@ WindowGrid.exe /help
 
 ## Configuration
 
-Settings are stored in `WindowGrid.settings` (JSON) next to `WindowGrid.exe`:
+Settings are stored in `WindowGridRust.settings` (JSON) next to `WindowGridRust.exe`. The format is the same as the original `WindowGrid.settings`, so an existing file can be copied and renamed:
 
 | Category | Setting Keys | Description |
 |---|---|---|
@@ -65,14 +67,14 @@ Settings are stored in `WindowGrid.settings` (JSON) next to `WindowGrid.exe`:
 - [Rust Workspace & Build Guide](rust/README.md) — crate architecture, toolchain setup, build scripts, and isolated/e2e test suites.
 - [Architecture & IPC Contracts](docs/ARCHITECTURE_AND_IPC.md)
 - [Maintenance Standard Operating Procedures](docs/MAINTENANCE_SOP.md)
-- [ADR 003: Window Margin Compensation and Move Size Preservation](docs/adr/003-window-margin-compensation.md)
-- [ADR 004: Defer Window Resize Until Drag Release](docs/adr/004-defer-resize-until-release.md)
-- [ADR 005: Behavior Specification for the Rust Hook (`wg-hook`)](docs/adr/005-rust-hook-behavior-spec.md)
-- [ADR 006: Rust Overlay (`wg-overlay`)](docs/adr/006-rust-overlay.md)
-- [ADR 007: Rust App (`wg-app`)](docs/adr/007-rust-app.md)
-- [ADR 008: Target Window Identification and Post-Snap Placement Verification](docs/adr/008-snap-target-and-placement-verification.md)
+- [ADR 000: Window Margin Compensation and Move Size Preservation](docs/adr/000-window-margin-compensation.md)
+- [ADR 001: Defer Window Resize Until Drag Release](docs/adr/001-defer-resize-until-release.md)
+- [ADR 002: Behavior Specification for the Rust Hook (`wg-hook`)](docs/adr/002-rust-hook-behavior-spec.md)
+- [ADR 003: Rust Overlay (`wg-overlay`)](docs/adr/003-rust-overlay.md)
+- [ADR 004: Rust App (`wg-app`)](docs/adr/004-rust-app.md)
+- [ADR 005: Target Window Identification and Post-Snap Placement Verification](docs/adr/005-snap-target-and-placement-verification.md)
 - [Changelog](CHANGELOG.md)
 
 ## License
 
-WindowGrid is released under the [MIT License](LICENSE).
+WindowGridRust is released under the [MIT License](LICENSE).

@@ -1,5 +1,5 @@
 //! Exports and callbacks: `RunDll`, the in-context WinEvent callback, the per-drag
-//! input hooks and the window-procedure subclass (behavior: ADR 005).
+//! input hooks and the window-procedure subclass (behavior: ADR 002).
 
 use crate::grid::{Point, Rect};
 use crate::log;
@@ -14,7 +14,7 @@ use wg_core::ipc::{InputMemory, SettingsMemory, Wire, INPUT_MAP_SIZE, MAX_INPUTS
 
 /// Picks a name for the normal build or, with the `isolated` feature, a test-only name.
 /// Isolated builds share no mutex, window message or shared-memory section with a running
-/// WindowGrid, so tests can never disturb (or be disturbed by) a real installation.
+/// WindowGridRust, so tests can never disturb (or be disturbed by) a real installation.
 macro_rules! name {
     ($normal:literal, $isolated:literal) => {{
         #[cfg(not(feature = "isolated"))]
@@ -30,10 +30,10 @@ macro_rules! name {
 
 #[cfg(target_arch = "x86_64")]
 const MUTEX_NAME: *const u16 =
-    name!("Global\\{58B6584C-820B-4813-97D1-6C923AD1CB42}", "Global\\{58B6584C-820B-4813-97D1-6C923AD1CB42}-iso");
+    name!("Global\\{D82B85E1-BAA7-419F-AD0E-C1540EF8BFAB}", "Global\\{D82B85E1-BAA7-419F-AD0E-C1540EF8BFAB}-iso");
 #[cfg(target_arch = "x86")]
 const MUTEX_NAME: *const u16 =
-    name!("Global\\{C26E1FC8-F719-4044-9122-029960C6C933}", "Global\\{C26E1FC8-F719-4044-9122-029960C6C933}-iso");
+    name!("Global\\{FD439CB8-8CFC-4209-BB19-DF8AA54B6E56}", "Global\\{FD439CB8-8CFC-4209-BB19-DF8AA54B6E56}-iso");
 #[cfg(target_arch = "aarch64")]
 const MUTEX_NAME: *const u16 =
     name!("Global\\{7F3A1C52-5B2E-4C8D-9A41-3E6D0B8C2F17}", "Global\\{7F3A1C52-5B2E-4C8D-9A41-3E6D0B8C2F17}-iso");
@@ -165,15 +165,15 @@ pub extern "system" fn DllMain(module: isize, _reason: u32, _reserved: *mut u8) 
 fn register_messages() {
     // SAFETY: the names are NUL-terminated wide literals.
     unsafe {
-        MSG_SHOW_GRID.store(sys::RegisterWindowMessageW(name!("WindowGridShowGrid", "WindowGridIsoShowGrid")), Ordering::Relaxed);
-        MSG_AREA.store(sys::RegisterWindowMessageW(name!("WindowGridArea", "WindowGridIsoArea")), Ordering::Relaxed);
-        MSG_TARGET.store(sys::RegisterWindowMessageW(name!("WindowGridTarget", "WindowGridIsoTarget")), Ordering::Relaxed);
-        MSG_STOP.store(sys::RegisterWindowMessageW(name!("WindowGridStop", "WindowGridIsoStop")), Ordering::Relaxed);
+        MSG_SHOW_GRID.store(sys::RegisterWindowMessageW(name!("WindowGridRustShowGrid", "WindowGridRustIsoShowGrid")), Ordering::Relaxed);
+        MSG_AREA.store(sys::RegisterWindowMessageW(name!("WindowGridRustArea", "WindowGridRustIsoArea")), Ordering::Relaxed);
+        MSG_TARGET.store(sys::RegisterWindowMessageW(name!("WindowGridRustTarget", "WindowGridRustIsoTarget")), Ordering::Relaxed);
+        MSG_STOP.store(sys::RegisterWindowMessageW(name!("WindowGridRustStop", "WindowGridRustIsoStop")), Ordering::Relaxed);
     }
 }
 
 /// `rundll32.exe <dll>,RunDll`: installs the WinEvent hook and pumps messages until the
-/// app broadcasts `WindowGridStop`.
+/// app broadcasts `WindowGridRustStop`.
 #[no_mangle]
 pub extern "system" fn RunDll(hwnd: isize, _instance: isize, _cmdline: *const u8, _show: i32) {
     // SAFETY: Win32 calls with valid arguments.
@@ -190,7 +190,7 @@ pub extern "system" fn RunDll(hwnd: isize, _instance: isize, _cmdline: *const u8
 }
 
 unsafe fn run_message_loop(hwnd: isize) {
-    log::info(concat!("Starting WindowGrid hook (", env!("CARGO_PKG_VERSION"), ")"));
+    log::info(concat!("Starting WindowGridRust hook (", env!("CARGO_PKG_VERSION"), ")"));
     register_messages();
     let stop = MSG_STOP.load(Ordering::Relaxed);
     sys::ChangeWindowMessageFilterEx(hwnd, stop, sys::MSGFLT_ALLOW, core::ptr::null_mut());
@@ -231,7 +231,7 @@ unsafe fn run_message_loop(hwnd: isize) {
         log::error("UnhookWinEvent failed", sys::GetLastError());
     }
     EVENT_HOOK.store(0, Ordering::Relaxed);
-    log::info("Exiting WindowGrid hook");
+    log::info("Exiting WindowGridRust hook");
 }
 
 // ---- WinEvent callback (runs inside the dragged window's process) -----------------------
@@ -281,8 +281,8 @@ unsafe fn begin_session(hwnd: isize) {
 
     let mut hook_bytes = [0u8; SettingsMemory::SIZE];
     let mut input_bytes = [0u8; INPUT_MAP_SIZE];
-    if !read_section(name!("WindowGridMapping_Hook", "WindowGridIsoMapping_Hook"), SettingsMemory::SIZE, &mut hook_bytes)
-        || !read_section(name!("WindowGridMapping_Input", "WindowGridIsoMapping_Input"), INPUT_MAP_SIZE, &mut input_bytes)
+    if !read_section(name!("WindowGridRustMapping_Hook", "WindowGridRustIsoMapping_Hook"), SettingsMemory::SIZE, &mut hook_bytes)
+        || !read_section(name!("WindowGridRustMapping_Input", "WindowGridRustIsoMapping_Input"), INPUT_MAP_SIZE, &mut input_bytes)
     {
         log::error("Unable to map memory", sys::GetLastError());
         return;

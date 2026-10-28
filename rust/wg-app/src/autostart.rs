@@ -63,7 +63,7 @@ fn scheduler(args: &[&str]) -> bool {
 }
 
 /// Enables or disables starting at logon. The task is only touched if the `Run` value
-/// succeeded, like before.
+/// succeeded, like the original installer.
 pub fn set(name: &str, exe: &Path, enable: bool) -> bool {
     let run_ok = if enable {
         reg_set_string(RUN_KEY, name, &exe.display().to_string())
@@ -98,12 +98,12 @@ mod tests {
 
     #[test]
     fn task_xml_runs_the_exe_at_logon_with_highest_privileges() {
-        let xml = task_xml("WindowGrid", Path::new(r"C:\Program Files\WindowGrid\WindowGrid.exe"));
-        assert!(xml.contains("<Command>C:\\Program Files\\WindowGrid\\WindowGrid.exe</Command>"));
+        let xml = task_xml("WindowGridRust", Path::new(r"C:\Program Files\WindowGridRust\WindowGridRust.exe"));
+        assert!(xml.contains("<Command>C:\\Program Files\\WindowGridRust\\WindowGridRust.exe</Command>"));
         assert!(xml.contains("<LogonTrigger>") && xml.contains("<RunLevel>HighestAvailable</RunLevel>"));
         assert!(xml.contains("<MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>"));
         assert!(xml.contains("<ExecutionTimeLimit>PT0S</ExecutionTimeLimit>"));
-        assert!(xml.contains("<URI>\\WindowGrid</URI>"));
+        assert!(xml.contains("<URI>\\WindowGridRust</URI>"));
         assert!(!xml.to_lowercase().contains("windowgrid.net"), "no third-party attribution");
     }
 
@@ -125,7 +125,7 @@ mod tests {
     #[test]
     fn run_key_value_round_trip_in_a_scratch_key() {
         // Uses a throwaway subkey; the real Run key is never touched by tests.
-        let key = format!(r"Software\WindowGridTest-{}-autostart", std::process::id());
+        let key = format!(r"Software\WindowGridRustTest-{}-autostart", std::process::id());
         let (key, name) = (key.as_str(), "t");
         assert!(reg_set_string(key, name, r"C:\a b\c.exe"));
         assert_eq!(reg_get_string(key, name).as_deref(), Some(r"C:\a b\c.exe"));

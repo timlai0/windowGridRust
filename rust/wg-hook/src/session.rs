@@ -1,4 +1,4 @@
-//! The per-drag state machine (ADR 005): input commands, mode flags, and the messages the
+//! The per-drag state machine (ADR 002): input commands, mode flags, and the messages the
 //! hook posts to the overlay. All side effects go through [`Host`], so the sequencing can
 //! be tested without any real windows.
 

@@ -5,9 +5,9 @@
 use std::io;
 use std::path::{Path, PathBuf};
 
-pub const PRODUCT: &str = "WindowGrid";
+pub const PRODUCT: &str = "WindowGridRust";
 
-/// `%ProgramFiles%\WindowGrid`.
+/// `%ProgramFiles%\WindowGridRust`.
 pub fn default_dir() -> PathBuf {
     let base = std::env::var_os("ProgramFiles").map_or_else(|| PathBuf::from(r"C:\Program Files"), PathBuf::from);
     base.join(PRODUCT)
@@ -123,7 +123,7 @@ pub fn install(
     if let Err(e) = ports.secure(&dir) {
         ports.log(&format!("Could not set permissions on \"{}\": {e}", dir.display()));
     }
-    let target = dir.join(exe.file_name().unwrap_or_else(|| "WindowGrid.exe".as_ref()));
+    let target = dir.join(exe.file_name().unwrap_or_else(|| "WindowGridRust.exe".as_ref()));
     let copied = ports.copy(exe, &target)? == CopyResult::Copied;
     ports.save_settings(&dir, copied)?;
     if shortcut && !ports.shortcut(&target) {
@@ -208,14 +208,14 @@ mod tests {
 
     #[test]
     fn elevation_command_line() {
-        assert_eq!(elevated_args(Path::new(r"C:\Program Files\WindowGrid\"), true, true), r#"/install "C:\Program Files\WindowGrid" /s /shortcut /onstartup"#);
+        assert_eq!(elevated_args(Path::new(r"C:\Program Files\WindowGridRust\"), true, true), r#"/install "C:\Program Files\WindowGridRust" /s /shortcut /onstartup"#);
         assert_eq!(elevated_args(Path::new(r"D:\wg"), false, false), r#"/install "D:\wg" /s"#);
     }
 
     #[test]
     fn unwritable_directory_requests_elevation_and_installs_nothing() {
         let mut f = Fake { writable: false, elevate_ok: true, ..Fake::default() };
-        let out = install(&mut f, Path::new(r"C:\x\WindowGrid.exe"), Some(PathBuf::from(r"C:\locked")), true, false).unwrap();
+        let out = install(&mut f, Path::new(r"C:\x\WindowGridRust.exe"), Some(PathBuf::from(r"C:\locked")), true, false).unwrap();
         assert_eq!(out, Outcome::Elevated(true));
         assert_eq!(f.calls, [r#"elevate /install "C:\locked" /s /shortcut"#]);
         let mut f = Fake { writable: false, elevate_ok: false, ..Fake::default() };
@@ -225,18 +225,18 @@ mod tests {
     #[test]
     fn fresh_install_copies_saves_integrates_and_restarts() {
         let mut f = Fake { writable: true, ..Fake::default() };
-        let out = install(&mut f, Path::new(r"C:\dl\WindowGrid.exe"), Some(PathBuf::from(r"D:\wg")), true, true).unwrap();
-        assert_eq!(out, Outcome::Installed { target: PathBuf::from(r"D:\wg\WindowGrid.exe"), restarted: true });
+        let out = install(&mut f, Path::new(r"C:\dl\WindowGridRust.exe"), Some(PathBuf::from(r"D:\wg")), true, true).unwrap();
+        assert_eq!(out, Outcome::Installed { target: PathBuf::from(r"D:\wg\WindowGridRust.exe"), restarted: true });
         assert_eq!(
             f.calls,
             [
                 r"mkdir D:\wg",
                 "secure",
-                r"copy C:\dl\WindowGrid.exe -> D:\wg\WindowGrid.exe",
+                r"copy C:\dl\WindowGridRust.exe -> D:\wg\WindowGridRust.exe",
                 r"save D:\wg adopt=true",
                 "shortcut",
                 "autostart",
-                r"launch D:\wg\WindowGrid.exe",
+                r"launch D:\wg\WindowGridRust.exe",
             ]
         );
     }
@@ -244,8 +244,8 @@ mod tests {
     #[test]
     fn running_from_the_install_directory_does_not_restart() {
         let mut f = Fake { writable: true, copy_result: Some(CopyResult::SameFile), ..Fake::default() };
-        let out = install(&mut f, Path::new(r"D:\wg\WindowGrid.exe"), Some(PathBuf::from(r"D:\wg")), false, true).unwrap();
-        assert_eq!(out, Outcome::Installed { target: PathBuf::from(r"D:\wg\WindowGrid.exe"), restarted: false });
+        let out = install(&mut f, Path::new(r"D:\wg\WindowGridRust.exe"), Some(PathBuf::from(r"D:\wg")), false, true).unwrap();
+        assert_eq!(out, Outcome::Installed { target: PathBuf::from(r"D:\wg\WindowGridRust.exe"), restarted: false });
         assert!(f.calls.contains(&r"save D:\wg adopt=false".to_string()));
         assert!(f.calls.contains(&"autostart".to_string()));
         assert!(!f.calls.iter().any(|c| c.starts_with("launch") || c == "shortcut"));
@@ -254,8 +254,8 @@ mod tests {
     #[test]
     fn default_directory_is_used_when_none_is_given() {
         let mut f = Fake { writable: true, ..Fake::default() };
-        install(&mut f, Path::new("WindowGrid.exe"), Some(PathBuf::new()), false, false).unwrap();
-        assert!(f.calls[0].starts_with("mkdir ") && f.calls[0].ends_with("WindowGrid"), "{:?}", f.calls[0]);
+        install(&mut f, Path::new("WindowGridRust.exe"), Some(PathBuf::new()), false, false).unwrap();
+        assert!(f.calls[0].starts_with("mkdir ") && f.calls[0].ends_with("WindowGridRust"), "{:?}", f.calls[0]);
     }
 
     #[test]

@@ -9,10 +9,10 @@ use std::fmt::Write;
 use std::path::PathBuf;
 
 const COMPONENTS: [(&str, &str); 4] = [
-    ("OVERLAY", "WindowGridOverlay.exe"),
-    ("HOOK_X64", "WindowGrid64.dll"),
-    ("HOOK_X86", "WindowGrid32.dll"),
-    ("HOOK_ARM64", "WindowGridARM64.dll"),
+    ("OVERLAY", "WindowGridRustOverlay.exe"),
+    ("HOOK_X64", "WindowGridRust64.dll"),
+    ("HOOK_X86", "WindowGridRust32.dll"),
+    ("HOOK_ARM64", "WindowGridRustARM64.dll"),
 ];
 
 fn main() {

@@ -124,8 +124,8 @@ impl Tray {
     pub fn create(tooltip: &str, on_event: impl Fn(TrayEvent) + 'static) -> windows::core::Result<Tray> {
         HANDLER.with(|h| *h.borrow_mut() = Some(Rc::new(on_event)));
         TOOLTIP.with(|t| *t.borrow_mut() = tooltip.to_string());
-        let class = wide("WindowGridTrayWindow");
-        let title = wide("WindowGrid");
+        let class = wide("WindowGridRustTrayWindow");
+        let title = wide("WindowGridRust");
         let created = wide("TaskbarCreated");
         // SAFETY: standard class registration and creation of a hidden window.
         unsafe {

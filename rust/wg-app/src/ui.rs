@@ -319,7 +319,7 @@ pub fn create_settings_window(
         let p = paths.work_dir.clone();
         move || {
             if !dialogs::open_path(&p) {
-                dialogs::tell("WindowGrid", "Could not open the working directory.", true);
+                dialogs::tell("WindowGridRust", "Could not open the working directory.", true);
             }
         }
     });
@@ -328,10 +328,10 @@ pub fn create_settings_window(
         move || {
             if p.exists() {
                 if !dialogs::open_path(&p) {
-                    dialogs::tell("WindowGrid", "Could not open the log file.", true);
+                    dialogs::tell("WindowGridRust", "Could not open the log file.", true);
                 }
             } else {
-                dialogs::tell("WindowGrid", "The log file does not exist yet.", false);
+                dialogs::tell("WindowGridRust", "The log file does not exist yet.", false);
             }
         }
     });
@@ -432,7 +432,7 @@ pub fn open_install_dialog(
     let cancel = {
         let finish = finish.clone();
         Rc::new(move || {
-            if dialogs::ask("WindowGrid Setup", "Cancel Installation?") {
+            if dialogs::ask("WindowGridRust Setup", "Cancel Installation?") {
                 finish(None);
                 true
             } else {
