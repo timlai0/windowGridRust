@@ -1,0 +1,38 @@
+[package]
+name = "wg-app-iced"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "WindowGridRust app with an iced UI: the all-Rust fork of wg-app (same logic, no Slint)"
+build = "build.rs"
+
+[dependencies]
+wg-core = { path = "../wg-core" }
+wg-win = { path = "../wg-win" }
+# The logic modules (settings model, installer, supervisor, tray, ...) without the Slint windows.
+wg-app = { path = "../wg-app", default-features = false }
+# The software renderer, like the Slint app: no GPU or web runtime needed.
+iced = { version = "0.14", default-features = false, features = ["tiny-skia", "thread-pool", "canvas", "image-without-codecs"] }
+png = "0.18"
+
+[dependencies.windows]
+version = "0.62"
+features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging"]
+
+[dev-dependencies]
+# For `tests/frame_cost.rs`, which drives iced's layout, drawing and software rasterizer without a window.
+iced_runtime = "0.14"
+iced_tiny_skia = "0.14"
+tiny-skia = { version = "0.11", default-features = false, features = ["std", "simd"] }
+
+[dev-dependencies.windows]
+version = "0.62"
+features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_Storage_Xps", "Win32_System_Threading", "Win32_UI_WindowsAndMessaging"]
+
+[build-dependencies]
+embed-resource = "3"
+
+[features]
+# Test-only mutex, window-message and shared-memory names; embeds the isolated components.
+isolated = ["wg-app/isolated"]

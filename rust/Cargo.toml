@@ -1,7 +1,8 @@
 [workspace]
 resolver = "2"
-members = ["wg-core", "wg-hook", "wg-overlay", "wg-win", "wg-e2e", "wg-app"]
+members = ["wg-core", "wg-hook", "wg-overlay", "wg-win", "wg-e2e", "wg-app", "wg-app-iced"]
 # wg-e2e drives the real mouse and keyboard; it is only built and run when asked for (-p wg-e2e).
+# wg-app-iced is the all-Rust (iced) fork of wg-app; it is only built when asked for (-p wg-app-iced).
 default-members = ["wg-core", "wg-hook", "wg-overlay", "wg-win", "wg-app"]
 
 [workspace.package]
@@ -19,3 +20,34 @@ opt-level = "s"
 lto = true
 strip = true
 codegen-units = 1
+
+# The iced fork (wg-app-iced) draws every pixel itself, on the CPU, and the size-optimised code
+# above made that about three times as slow: repainting a full-HD window took 20 ms instead of
+# 8 ms, a slider drag 10 ms instead of 2 ms (ADR 006, "Responsiveness"). So the crates that do the
+# drawing are built for speed and everything else stays small. Versions are given where the
+# lockfile has several copies: the Slint app's copies keep "s". Cargo warns when an entry no
+# longer matches a package, which is the reminder to update it after a dependency update.
+[profile.release.package."wg-app-iced"]
+opt-level = 3
+[profile.release.package."iced_core"]
+opt-level = 3
+[profile.release.package."iced_graphics"]
+opt-level = 3
+[profile.release.package."iced_renderer"]
+opt-level = 3
+[profile.release.package."iced_runtime"]
+opt-level = 3
+[profile.release.package."iced_tiny_skia"]
+opt-level = 3
+[profile.release.package."iced_widget"]
+opt-level = 3
+[profile.release.package."tiny-skia@0.11.4"]
+opt-level = 3
+[profile.release.package."tiny-skia-path@0.11.4"]
+opt-level = 3
+[profile.release.package."cosmic-text"]
+opt-level = 3
+[profile.release.package."skrifa@0.37.0"]
+opt-level = 3
+[profile.release.package."read-fonts@0.35.0"]
+opt-level = 3

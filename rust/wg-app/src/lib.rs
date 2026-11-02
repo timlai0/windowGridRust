@@ -7,7 +7,7 @@ pub mod config;
 pub mod installer;
 pub mod viewmodel;
 
-#[cfg(windows)]
+#[cfg(all(windows, feature = "slint-ui"))]
 pub mod app;
 #[cfg(windows)]
 pub mod autostart;
@@ -23,7 +23,7 @@ pub mod shared;
 pub mod supervisor;
 #[cfg(windows)]
 pub mod tray;
-#[cfg(windows)]
+#[cfg(all(windows, feature = "slint-ui"))]
 pub mod ui;
 #[cfg(windows)]
 pub mod winops;

@@ -21,9 +21,12 @@ fn main() {
     println!("cargo:rerun-if-changed=assets");
     println!("cargo:rerun-if-env-changed=CARGO_FEATURE_ISOLATED");
 
-    let style = std::env::var("SLINT_STYLE").unwrap_or_else(|_| "fluent".into());
-    slint_build::compile_with_config("ui/app.slint", slint_build::CompilerConfiguration::new().with_style(style))
-        .expect("the Slint UI compiles");
+    #[cfg(feature = "slint-ui")]
+    {
+        let style = std::env::var("SLINT_STYLE").unwrap_or_else(|_| "fluent".into());
+        slint_build::compile_with_config("ui/app.slint", slint_build::CompilerConfiguration::new().with_style(style))
+            .expect("the Slint UI compiles");
+    }
 
     let root = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
     let isolated = std::env::var_os("CARGO_FEATURE_ISOLATED").is_some();
