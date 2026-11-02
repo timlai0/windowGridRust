@@ -4,13 +4,12 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "WindowGridRust app: settings UI, tray icon, installer and supervisor of the hook and overlay"
+description = "WindowGridRust app logic: settings model, tray icon, installer and supervisor of the hook and overlay (the windows are in wg-app-iced)"
 build = "build.rs"
 
 [dependencies]
 wg-core = { path = "../wg-core" }
 wg-win = { path = "../wg-win" }
-slint = { version = "1", default-features = false, features = ["std", "backend-winit", "renderer-software", "compat-1-2"], optional = true }
 
 [dependencies.windows]
 version = "0.62"
@@ -30,27 +29,6 @@ features = [
     "Win32_UI_WindowsAndMessaging",
 ]
 
-[build-dependencies]
-slint-build = { version = "1", optional = true }
-embed-resource = "3"
-
 [features]
-default = ["slint-ui"]
-# The Slint windows and the `wg-app` executable. Without it only the logic modules build,
-# which is what `wg-app-iced` (the iced fork of this app) reuses.
-slint-ui = ["dep:slint", "dep:slint-build"]
 # Test-only mutex, window-message and shared-memory names; embeds the isolated components.
 isolated = ["wg-core/isolated"]
-
-[[bin]]
-name = "wg-app"
-path = "src/main.rs"
-required-features = ["slint-ui"]
-
-[[test]]
-name = "lifecycle"
-required-features = ["slint-ui"]
-
-[[test]]
-name = "ui_render"
-required-features = ["slint-ui"]

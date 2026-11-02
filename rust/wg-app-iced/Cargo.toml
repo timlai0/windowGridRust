@@ -4,15 +4,15 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "WindowGridRust app with an iced UI: the all-Rust fork of wg-app (same logic, no Slint)"
+description = "WindowGridRust.exe: the tray app and its settings, setup and splash windows, drawn with iced"
 build = "build.rs"
 
 [dependencies]
 wg-core = { path = "../wg-core" }
 wg-win = { path = "../wg-win" }
-# The logic modules (settings model, installer, supervisor, tray, ...) without the Slint windows.
-wg-app = { path = "../wg-app", default-features = false }
-# The software renderer, like the Slint app: no GPU or web runtime needed.
+# The logic modules: settings model, installer, supervisor, tray, ...
+wg-app = { path = "../wg-app" }
+# The software renderer: no GPU or web runtime needed.
 iced = { version = "0.14", default-features = false, features = ["tiny-skia", "thread-pool", "canvas", "image-without-codecs"] }
 png = "0.18"
 

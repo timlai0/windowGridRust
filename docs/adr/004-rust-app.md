@@ -1,8 +1,8 @@
 # ADR 004: Rust App (`wg-app`)
 
 **Date:** 2026-10-14  
-**Amended:** 2026-10-20  
-**Status:** Accepted
+**Amended:** 2026-11-02  
+**Status:** Accepted. The UI decision (Slint) is superseded by [ADR 006](006-iced-ui-fork.md): v2.0.0 is the last release with Slint, and that code lives on the `slint` branch. The rest of this record (one executable, supervision, testable logic) still holds; `wg-app` is now the logic library and `wg-app-iced` the executable.
 
 ## Context
 
@@ -14,7 +14,7 @@ The legacy C# app (`WindowGrid.exe`) was a 141 MB self-contained WPF program hos
 
 **UI: Slint, software renderer, Fluent style.** The settings window ports the C# one: live grid preview with the selected theme, columns/rows steppers (− and + buttons plus a slider) and presets, themes, blur, opacity, fill, radial gradient, margin compensation, preserve size, defer resize, anchor, the selection HUD options, the shortcut editor (command, modifier, key), splash, and the two Windows options that apply immediately (Aero Shake, window contents while dragging). Plus the Info & Usage page, the setup dialog and the splash screen. It follows the system's light or dark theme. The options are split over seven pages (Grid, Appearance, Behavior, Selection HUD, Shortcuts, Info & Usage, Under the hood) so that each fits the default window without scrolling; the C# window put them all on one long scrolling page. Slint's royalty-free license requires showing the `AboutSlint` widget on an About screen reachable from the top-level menu: it is on the Info page, which the tray menu opens.
 
-An all-Rust variant of this UI (iced instead of Slint, same logic) exists as an opt-in fork: [ADR 006](006-iced-ui-fork.md).
+From v2.1.0 the windows are iced instead of Slint, with the same logic: [ADR 006](006-iced-ui-fork.md).
 
 **Behavior is split into testable logic and glue.** `args` (command line), `viewmodel` (clamps, summaries, presets), `config` (the settings file and what is published from it), `installer` (sequencing, against an `InstallPorts` trait) and `supervisor`'s restart policy and process list are plain logic with unit tests. `winops`, `autostart`, `osopts`, `tray`, `dialogs`, `ui` and `app` are the Windows and Slint glue.
 

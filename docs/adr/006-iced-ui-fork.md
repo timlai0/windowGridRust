@@ -1,7 +1,16 @@
-# ADR 006: iced UI fork (`wg-app-iced`)
+# ADR 006: iced UI (`wg-app-iced`)
 
 **Date:** 2026-11-01  
-**Status:** Accepted (opt-in fork; `wg-app` with Slint remains the default)
+**Amended:** 2026-11-02  
+**Status:** Accepted. Since v2.1.0 iced is the app; the Slint version is kept on the `slint` branch.
+
+## Amendment (2026-11-02): iced replaces Slint as the app
+
+The decision below was first taken for an opt-in fork that sat beside the Slint app. The iced build was then made the main release:
+
+- **`WindowGridRust.exe` is the iced build** (v2.1.0). It keeps the name, the settings file and every IPC name of v2.0.0, so an installed copy, its autostart entry and `/replace` carry over. `WindowGridRust-iced.exe` and `build-app-iced.ps1` no longer exist; `build-app.ps1` builds the app.
+- **Slint is gone from `main`**: `ui/app.slint`, `ui.rs`, `app.rs`, `main.rs`, the Slint tests and the `slint-ui` feature. They live on the `slint` branch, cut from the v2.0.0 tag, and v2.0.0 is the last release with Slint. `wg-app` is now only the logic library and `wg-app-iced` the executable; both are default workspace members.
+- The sections below are the record of the decision as taken for the fork. Read "fork", "opt-in", "feature gate" and `WindowGridRust-iced.exe` in them as the state before this amendment; the comparison with the Slint app (size, memory, speed) is of v2.0.0 and still describes it.
 
 ## Context
 

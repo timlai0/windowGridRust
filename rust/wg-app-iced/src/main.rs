@@ -1,4 +1,4 @@
-//! `WindowGridRust-iced.exe`.
+//! `WindowGridRust.exe`.
 #![windows_subsystem = "windows"]
 
 fn main() {

@@ -1,4 +1,4 @@
-//! The application icon, decoded once from the PNG that the Slint app uses too.
+//! The application icon, decoded once from the PNG that `wg-app` keeps with the icon resource.
 
 use iced::widget::image;
 use iced::window;

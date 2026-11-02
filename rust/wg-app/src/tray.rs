@@ -1,6 +1,6 @@
 //! The notification-area icon: a hidden window that owns the icon and its menu.
 //!
-//! It is an ordinary window on the UI thread, so the Slint event loop (which pumps that
+//! It is an ordinary window on the UI thread, so the UI toolkit's event loop (which pumps that
 //! thread's messages) delivers its events; no separate loop is needed.
 
 use std::cell::{Cell, RefCell};

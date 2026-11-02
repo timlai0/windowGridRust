@@ -1,4 +1,4 @@
-//! Startup, shutdown and the windows: the iced counterpart of `wg_app::app`.
+//! Startup, shutdown, the command line flows and the windows.
 //!
 //! The whole process is one `iced::daemon`: it has no window of its own, keeps running when
 //! its windows are closed, and ends only through [`iced::exit`]. That is the shape of a tray

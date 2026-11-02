@@ -9,8 +9,8 @@ Developer reference for the Cargo workspace in `rust/`. For product overview, us
 | `wg-core` | Settings serialization, IPC wire structs, key code tables, log format (`no_std` without default `std` feature). | `settings.rs`, `ipc.rs`, `keycode.rs`, `keycode_table.rs`, `json.rs`, `log.rs`, `names.rs` |
 | `wg-hook` | `WindowGridRust64.dll`, `WindowGridRust32.dll`, `WindowGridRustARM64.dll` (`RunDll`, in-context WinEvent hook, input hooks, window subclass; `no_std`, CRT-free). | `grid.rs` (pure math), `session.rs` (`Host` state machine), `entry.rs` (Win32 exports/callbacks), `sys.rs` (`raw-dylib`), `rt.rs` (CRT shims), `log.rs` |
 | `wg-overlay` | `WindowGridRustOverlay.exe`: click-through DirectComposition window rendered with Direct2D/DirectWrite, plus final window snap execution and post-snap placement verification. | `snap.rs` (`compute`, `Verify`), `hud.rs`, `state.rs`, `geom.rs`, `theme.rs` (pure logic), `gfx.rs` (Direct2D/DirectWrite), `app.rs` (window, messages, single instance) |
-| `wg-app` | `WindowGridRust.exe`: Slint Fluent UI (behind the default `slint-ui` feature), system tray icon, CLI installer, and job-object supervisor; embeds the overlay and hook DLLs. | `args.rs`, `viewmodel.rs`, `config.rs`, `installer.rs` (pure logic), `winops.rs`, `autostart.rs`, `osopts.rs`, `tray.rs`, `ui.rs`, `app.rs`, `ui/app.slint` |
-| `wg-app-iced` | `WindowGridRust-iced.exe`: the all-Rust fork of `wg-app` ([ADR 006](../docs/adr/006-iced-ui-fork.md)). Same logic (it uses `wg-app` without the `slint-ui` feature), but the settings, setup and splash windows are [iced](https://docs.rs/iced/latest/iced/) with the software renderer, so there is no `.slint` file. Opt-in: not a default member. | `app.rs` (startup, `iced::daemon`, tray bridge), `settings.rs` (state, update, `Layout`, pages), `install.rs`, `preview.rs` and `backdrop.rs` (canvas), `widgets.rs`, `style.rs`, `assets.rs` |
+| `wg-app` | The app's logic, without windows: settings model, command line, system tray icon, installer, and job-object supervisor; embeds the overlay and hook DLLs. | `args.rs`, `viewmodel.rs`, `config.rs`, `installer.rs` (pure logic), `winops.rs`, `autostart.rs`, `osopts.rs`, `tray.rs`, `components.rs`, `supervisor.rs`, `shared.rs`, `dialogs.rs` |
+| `wg-app-iced` | `WindowGridRust.exe`, the app ([ADR 006](../docs/adr/006-iced-ui-fork.md)): `wg-app`'s logic plus the settings, setup and splash windows, drawn with [iced](https://docs.rs/iced/latest/iced/) and its software renderer. All Rust. The Slint version of the app (v2.0.0 and earlier) is on the `slint` branch. | `app.rs` (startup, `iced::daemon`, tray bridge), `settings.rs` (state, update, `Layout`, pages), `install.rs`, `preview.rs` and `backdrop.rs` (canvas), `widgets.rs`, `style.rs`, `assets.rs` |
 | `wg-win` | Shared Win32 helpers used by `wg-overlay` and `wg-app`. | `shm.rs`, `logger.rs`, `instance.rs`, `png.rs` |
 | `wg-e2e` | Real-drag integration test harness driving physical mouse and keyboard events via `SendInput` (`#[ignore]`d by default). | `tests/drag.rs` |
 
@@ -32,13 +32,10 @@ Or directly in PowerShell:
 .\build-hooks.ps1    # Builds dist\WindowGridRust64.dll, WindowGridRust32.dll, WindowGridRustARM64.dll
 .\build-overlay.ps1  # Builds dist\WindowGridRustOverlay.exe
 .\build-app.ps1      # Builds hooks + overlay, then embeds them into dist\WindowGridRust.exe
-.\build-app-iced.ps1 # Same, but the iced fork: dist\WindowGridRust-iced.exe
 ```
 
-`WindowGridRust-iced.exe` and `WindowGridRust.exe` use the same settings file, log, and IPC names, so only one of them runs at a time: starting one replaces the other.
-
 - **Hook DLLs (`wg-hook`):** Link directly with `rust-lld` and `raw-dylib` imports (`.cargo/config.toml`), requiring no Visual Studio or Windows SDK and importing only `kernel32`, `user32`, and `dwmapi`.
-- **Overlay & App (`wg-overlay`, `wg-app`):** Use `std` and link against the C runtime via the GNU target toolchain plus MSYS2 binutils (or MSVC Build Tools if installed).
+- **Overlay & App (`wg-overlay`, `wg-app`, `wg-app-iced`):** Use `std` and link against the C runtime via the GNU target toolchain plus MSYS2 binutils (or MSVC Build Tools if installed).
 
 ## ARM64 Windows
 
@@ -55,7 +52,7 @@ set "PATH=C:\msys64\ucrt64\bin;%PATH%"
 cargo test
 ```
 
-Offscreen PNG renders for visual inspection are written to `target\tmp\` by `cargo test -p wg-overlay --test render` and `cargo test -p wg-app --test ui_render`.
+Offscreen PNG renders of the overlay for visual inspection are written to `target\tmp\` by `cargo test -p wg-overlay --test render`. The app's windows are captured on the real desktop by its lifecycle tests (below).
 
 ### Isolated Process Tests (`--features isolated`)
 
@@ -67,7 +64,7 @@ Building or testing with `--features isolated` (or `-Isolated` on the build scri
 powershell -NoProfile -ExecutionPolicy Bypass -File build-app.ps1 -Isolated
 set "PATH=C:\msys64\ucrt64\bin;%PATH%"
 cargo test -p wg-overlay --features isolated
-cargo test -p wg-app --test lifecycle --features isolated -- --test-threads=1
+cargo test -p wg-app-iced --test lifecycle --features isolated -- --test-threads=1
 ```
 
 | Environment Variable | Crate | Description |
@@ -75,18 +72,16 @@ cargo test -p wg-app --test lifecycle --features isolated -- --test-threads=1
 | `WG_TEST_RECT` | `wg-overlay` | Overrides monitor work area (`left,top,right,bottom`). |
 | `WG_TEST_TARGET` | `wg-overlay` | Forces the target `HWND` for snap tests. |
 | `WG_TEST_NO_TIMER` | `wg-overlay` | Disables the 15 ms safety-net timer in synthetic message tests. |
-| `WG_TEST_NO_PROMPT` | `wg-app` | Skips the first-run setup prompt. |
-| `WG_TEST_OPEN_SETTINGS` | `wg-app` | Opens the Settings window on launch. |
-| `WG_TEST_QUIT_AFTER_MS` | `wg-app`, `wg-app-iced` | Automatically quits the app after `<ms>` milliseconds. |
+| `WG_TEST_NO_PROMPT` | `wg-app-iced` | Skips the first-run setup prompt. |
+| `WG_TEST_OPEN_SETTINGS` | `wg-app-iced` | Opens the Settings window on launch. |
+| `WG_TEST_QUIT_AFTER_MS` | `wg-app-iced` | Automatically quits the app after `<ms>` milliseconds. |
 | `WG_TEST_PAGE` | `wg-app-iced` | With `WG_TEST_OPEN_SETTINGS`, the settings page shown first (`0`-`6`, in navigation order). |
 | `WG_TEST_ASK` | `wg-app-iced` | With `WG_TEST_OPEN_SETTINGS`, opens the `exit` or `reset` question over the settings window. |
 | `WG_TEST_NO_HELPERS` | `wg-app-iced` | Starts the tray app without the overlay, the hook hosts and the shared memory, for tests of the windows: nothing then loads a hook DLL into another process. |
 
-`WG_TEST_NO_PROMPT`, `WG_TEST_OPEN_SETTINGS` and `WG_TEST_QUIT_AFTER_MS` work in `wg-app-iced` as in `wg-app`. As there, the switches are read in `--features isolated` builds only.
+The switches are read in `--features isolated` builds only.
 
-### The iced fork (`wg-app-iced`)
-
-Not a default member, so name it explicitly:
+### The app (`wg-app-iced`)
 
 ```cmd
 set "PATH=C:\msys64\ucrt64\bin;%PATH%"

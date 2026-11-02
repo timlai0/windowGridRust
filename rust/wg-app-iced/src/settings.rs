@@ -1,5 +1,4 @@
-//! The settings window: state, messages, update and views. The counterpart of
-//! `SettingsWindow` in `wg-app`'s `ui/app.slint` and of the handlers in its `ui.rs`.
+//! The settings window: state, messages, update and views.
 //!
 //! The window can be any size: WindowGridRust itself snaps windows (this one too) into grid
 //! cells. [`Layout`] turns the window's width into the arrangement used: the full navigation
@@ -860,7 +859,7 @@ impl SettingsWindow {
             "About WindowGridRust",
             column![
                 row![text("Version").style(style::faint(0.7)).width(70), text(self.version.as_str()).font(mono())].spacing(12),
-                text("This is the all-Rust build: its windows use iced, with no .slint files.").size(13).style(style::faint(0.8)),
+                text("Written entirely in Rust; the windows are drawn with iced.").size(13).style(style::faint(0.8)),
                 text("iced is MIT licensed. iced.rs").size(12).style(style::faint(0.6)),
             ]
             .spacing(12),

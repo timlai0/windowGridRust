@@ -13,7 +13,7 @@ WindowGridRust is an independent reimplementation of WindowGrid, the freeware wi
 - **Size-Preserving Moves:** Retains the window's visible dimensions when moving it across grid cells (`PreserveSizeOnMove`).
 - **Configurable Alignment Anchors:** Choose how oversized windows align relative to the selected grid cells (`TopLeft`, `Center`, `GrabPoint`).
 - **Customizable Appearance & HUD:** Configure column and row counts, color themes (`default`, `dark`, `light`, `red`, `green`, `blue`), outline or filled selection (`FillWindow`), shadow blur (`BlurRadius`), radial or linear gradient, and HUD metrics (dimensions, cell span, screen coverage, aspect ratio, mode indicator, interaction hints).
-- **Minimal Footprint:** Single ~10.5 MB executable (`WindowGridRust.exe`) embedding the DirectComposition/Direct2D overlay (~447 KB, ~9 MB idle working set) and `no_std` CRT-free hook DLLs (~17–20 KB each), with ~27 MB idle working set for the host app.
+- **Minimal Footprint:** Single ~4.8 MB executable (`WindowGridRust.exe`, all Rust, with its windows drawn by [iced](https://iced.rs)) embedding the DirectComposition/Direct2D overlay (~320 KB, ~9 MB idle working set) and `no_std` CRT-free hook DLLs (~18–21 KB each), with ~20 MB idle working set for the host app.
 
 ## Default Input Bindings
 
@@ -65,6 +65,7 @@ Settings are stored in `WindowGridRust.settings` (JSON) next to `WindowGridRust.
 ## Documentation & Development
 
 - [Rust Workspace & Build Guide](rust/README.md) — crate architecture, toolchain setup, build scripts, and isolated/e2e test suites.
+- The previous Slint version of the app (last release: [v2.0.0](https://github.com/timlai0/windowGridRust/releases/tag/v2.0.0)) is kept on the [`slint` branch](https://github.com/timlai0/windowGridRust/tree/slint).
 - [Architecture & IPC Contracts](docs/ARCHITECTURE_AND_IPC.md)
 - [Maintenance Standard Operating Procedures](docs/MAINTENANCE_SOP.md)
 - [ADR 000: Window Margin Compensation and Move Size Preservation](docs/adr/000-window-margin-compensation.md)
@@ -73,6 +74,7 @@ Settings are stored in `WindowGridRust.settings` (JSON) next to `WindowGridRust.
 - [ADR 003: Rust Overlay (`wg-overlay`)](docs/adr/003-rust-overlay.md)
 - [ADR 004: Rust App (`wg-app`)](docs/adr/004-rust-app.md)
 - [ADR 005: Target Window Identification and Post-Snap Placement Verification](docs/adr/005-snap-target-and-placement-verification.md)
+- [ADR 006: iced UI (`wg-app-iced`)](docs/adr/006-iced-ui-fork.md)
 - [Changelog](CHANGELOG.md)
 
 ## License

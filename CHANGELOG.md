@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- `wg-app-iced` ([ADR 006](docs/adr/006-iced-ui-fork.md)): an opt-in, all-Rust fork of `wg-app` whose settings, setup and splash windows use [iced](https://docs.rs/iced/latest/iced/) (software renderer) instead of Slint. Its windows are drawn on a visible grid (square cells, label and control tables, coordinates) and adapt to any window size, from a narrow grid cell to a full screen. It reuses `wg-app`'s logic unchanged and builds to `WindowGridRust-iced.exe` with `build-app-iced.ps1`. It is not a default workspace member (`cargo build -p wg-app-iced`).
+## [2.1.0] - 2026-11-02
 
 ### Changed
-- `wg-app` now has a default `slint-ui` feature. Without it (`default-features = false`) only the logic modules build, with no Slint dependency; `WindowGridRust.exe` itself is unchanged.
+- The app is now all Rust: its settings, setup and splash windows are drawn with [iced](https://docs.rs/iced/latest/iced/) (software renderer) instead of Slint ([ADR 006](docs/adr/006-iced-ui-fork.md)). The windows are drawn on a visible grid (square cells, label and control tables, coordinates) and adapt to any window size, from a narrow grid cell to a full screen. `WindowGridRust.exe` keeps its name, settings file and IPC names, so an installed copy and its autostart entry carry over; the executable is 4.8 MB instead of 11 MB.
+- Slint is no longer part of `main`. The Slint version is kept on the `slint` branch, and v2.0.0 is the last release with Slint. `wg-app` is now the logic library (settings model, installer, tray icon, supervisor) and the new `wg-app-iced` crate is the executable; both are default workspace members, and `build-app.ps1` builds the iced app.
 - The release profile builds the crates that draw the iced windows (iced, tiny-skia, cosmic-text and their font readers) for speed instead of size: repainting a full-HD window takes 7 ms instead of 20 ms, and a slider drag 2 ms instead of 10 ms. `WindowGridRust-iced.exe` grows from 3.8 to 4.8 MB; the hook DLLs, the overlay and the Slint `WindowGridRust.exe` are built as before.
 - In `wg-app-iced`, the "show window contents while dragging" switch sets the Windows option on a background thread: Windows tells every open program about that change and waits for them, which could freeze the settings window.
 

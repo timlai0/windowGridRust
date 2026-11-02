@@ -93,7 +93,7 @@ fn embedded_ok() -> bool {
 /// A copy of the app in a fresh directory, started with `env` and `args`.
 fn start(name: &str, args: &[&str], env: &[(&str, &str)]) -> (Kill, PathBuf) {
     let work = temp_dir(name);
-    let exe = work.join("WindowGridRust-iced.exe");
+    let exe = work.join("WindowGridRust.exe");
     std::fs::copy(APP, &exe).unwrap();
     let mut cmd = Command::new(&exe);
     cmd.args(args).current_dir(&work).env("WG_TEST_NO_PROMPT", "1");

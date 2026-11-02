@@ -1,5 +1,4 @@
-//! The setup dialog: install into a folder, or run portable. The counterpart of
-//! `InstallWindow` in `wg-app`'s `ui/app.slint`.
+//! The setup dialog: install into a folder, or run portable.
 
 use crate::backdrop::Backdrop;
 use crate::style;

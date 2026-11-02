@@ -1,4 +1,4 @@
-//! Compiles the Slint UI and embeds the overlay and hook DLLs.
+//! Embeds the overlay and hook DLLs.
 //!
 //! The components come from `../dist` (or `../dist-iso` for the `isolated` feature), built
 //! by `build-hooks.ps1` and `build-overlay.ps1`. If one is missing the app still builds, with
@@ -17,16 +17,7 @@ const COMPONENTS: [(&str, &str); 4] = [
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=ui");
-    println!("cargo:rerun-if-changed=assets");
     println!("cargo:rerun-if-env-changed=CARGO_FEATURE_ISOLATED");
-
-    #[cfg(feature = "slint-ui")]
-    {
-        let style = std::env::var("SLINT_STYLE").unwrap_or_else(|_| "fluent".into());
-        slint_build::compile_with_config("ui/app.slint", slint_build::CompilerConfiguration::new().with_style(style))
-            .expect("the Slint UI compiles");
-    }
 
     let root = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
     let isolated = std::env::var_os("CARGO_FEATURE_ISOLATED").is_some();
@@ -47,12 +38,4 @@ fn main() {
     }
     let out = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("components.rs");
     std::fs::write(out, code).unwrap();
-
-    // Icon: a failure (no resource compiler on this machine) is not fatal.
-    if cfg!(windows) {
-        let rc = root.join("assets").join("app.rc");
-        if rc.exists() {
-            let _ = embed_resource::compile(rc, embed_resource::NONE).manifest_optional();
-        }
-    }
 }

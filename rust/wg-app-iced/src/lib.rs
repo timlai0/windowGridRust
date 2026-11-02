@@ -1,6 +1,6 @@
-//! WindowGridRust with an iced UI: the all-Rust fork of `wg-app`. The settings model, the
-//! installer, the supervisor, the tray icon and the settings file are `wg-app`'s; only the
-//! windows (settings, setup, splash) and the event loop around them are new.
+//! `WindowGridRust.exe`: an all-Rust app whose windows (settings, setup, splash) are drawn with
+//! iced. The settings model, the installer, the supervisor, the tray icon and the settings
+//! file are in `wg-app`; this crate is the windows and the event loop around them.
 
 pub mod app;
 pub mod assets;

@@ -5,6 +5,8 @@
 .DESCRIPTION
   Produces dist\WindowGridRust.exe, a single executable that contains the overlay and the hook
   DLLs and extracts them next to itself on start. (The components are also left in dist\.)
+  The app is wg-app-iced: its windows are drawn with iced, in Rust only (docs\adr\006-iced-ui-fork.md).
+  The Slint version of the app, last released as v2.0.0, is on the slint branch.
 
   Like build-overlay.ps1 this needs the GNU target's linker plus binutils (dlltool, as and,
   for the icon, windres) from MSYS2; pass -BinutilsDir if it is not in C:\msys64\ucrt64\bin.
@@ -39,10 +41,10 @@ if ($Isolated) {
 & "$PSScriptRoot\build-hooks.ps1" @forward
 & "$PSScriptRoot\build-overlay.ps1" @forward -BinutilsDir $BinutilsDir
 
-# The components changed, so make sure the app picks them up.
+# The components changed, so make sure the app picks them up (wg-app embeds them).
 (Get-Item "$PSScriptRoot\wg-app\build.rs").LastWriteTime = Get-Date
 
-cargo build -p wg-app --release --target-dir $targetDir @features
+cargo build -p wg-app-iced --release --target-dir $targetDir @features
 if ($LASTEXITCODE -ne 0) { throw 'build failed' }
-Copy-Item "$targetDir\release\wg-app.exe" "$outDir\WindowGridRust.exe" -Force
+Copy-Item "$targetDir\release\wg-app-iced.exe" "$outDir\WindowGridRust.exe" -Force
 '{0,-24} {1,12:N0} bytes' -f 'WindowGridRust.exe', (Get-Item "$outDir\WindowGridRust.exe").Length

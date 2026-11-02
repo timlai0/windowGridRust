@@ -16,10 +16,10 @@ Toolchain setup, build scripts, test environment variables, and the test suites 
 
 ### 3.1 Release Artifacts
 
-`rust\dist\WindowGridRust.exe` is a self-contained single-file executable (~10.5 MB) that embeds `WindowGridRustOverlay.exe`, `WindowGridRust64.dll`, `WindowGridRust32.dll`, and `WindowGridRustARM64.dll`.
+`rust\dist\WindowGridRust.exe` is a self-contained single-file executable (~4.8 MB) that embeds `WindowGridRustOverlay.exe`, `WindowGridRust64.dll`, `WindowGridRust32.dll`, and `WindowGridRustARM64.dll`.
 
 - On startup, `WindowGridRust.exe` extracts its embedded components next to itself if missing or changed. If a hook DLL is currently mapped into another process and cannot be overwritten directly, `wg-app` renames the in-use file aside (`*.old-<N>`), writes the new DLL, and cleans up `.old-*` files on subsequent startups.
-- Before distributing a release, sign `WindowGridRustOverlay.exe` and the hook DLLs prior to running `cargo build -p wg-app --release`, then sign the resulting `WindowGridRust.exe`.
+- Before distributing a release, sign `WindowGridRustOverlay.exe` and the hook DLLs prior to running `cargo build -p wg-app-iced --release`, then sign the resulting `WindowGridRust.exe`.
 - Do not deploy active runtime directories inside OneDrive-synced folders.
 
 ### 3.2 Installation & Rollback
