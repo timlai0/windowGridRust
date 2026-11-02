@@ -4,6 +4,7 @@
 
 use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU32, Ordering};
 
 pub const PRODUCT: &str = "WindowGridRust";
 
@@ -24,10 +25,13 @@ pub fn same_file(a: &Path, b: &Path) -> bool {
 /// Whether the current user can create files in `dir` (or in the nearest directory that
 /// exists above it, if `dir` does not exist yet).
 pub fn can_write(dir: &Path) -> bool {
+    // Each probe has its own file name: two probes of one folder at once (tests do) must not
+    // find the other's file half deleted, which Windows reports as a refused create.
+    static PROBES: AtomicU32 = AtomicU32::new(0);
     let mut probe = Some(dir);
     while let Some(p) = probe {
         if p.is_dir() {
-            let file = p.join(format!(".wg-write-test-{}", std::process::id()));
+            let file = p.join(format!(".wg-write-test-{}-{}", std::process::id(), PROBES.fetch_add(1, Ordering::Relaxed)));
             let ok = std::fs::File::create(&file).is_ok();
             let _ = std::fs::remove_file(&file);
             return ok;
@@ -295,7 +299,8 @@ mod tests {
         let d = temp_dir("probe");
         assert!(can_write(&d));
         assert!(can_write(&d.join("does").join("not").join("exist")), "judged by the nearest existing parent");
-        assert!(!d.join(format!(".wg-write-test-{}", std::process::id())).exists(), "probe file removed");
+        let left = std::fs::read_dir(&d).unwrap().flatten().filter(|e| e.file_name().to_string_lossy().starts_with(".wg-write-test-")).count();
+        assert_eq!(left, 0, "probe files removed");
         let _ = std::fs::remove_dir_all(d);
     }
 }
